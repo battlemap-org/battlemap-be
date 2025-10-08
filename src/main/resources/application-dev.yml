@@ -1,6 +1,9 @@
 spring:
-  profiles:
-    active: dev  # 기본 실행 환경을 dev로 설정
+  datasource:
+    url: jdbc:postgresql://localhost:5432/battlemap
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
