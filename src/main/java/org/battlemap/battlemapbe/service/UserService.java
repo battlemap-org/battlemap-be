@@ -1,25 +1,25 @@
 package org.battlemap.battlemapbe.service;
 
+import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.model.User;
 import org.battlemap.battlemapbe.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.battlemap.battlemapbe.security.JwtTokenProvider;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    // ✅ 회원가입
     public void registerUser(User user) {
         // 아이디 중복 검사
-        if (userRepository.findById(user.getId()).isPresent()) {
+        if (userRepository.findByLoginId(user.getId()).isPresent()) {
             throw new IllegalArgumentException("중복된 아이디입니다.");
-        }
-
-        // 이메일 중복 검사
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("중복된 이메일입니다.");
         }
 
         // 비밀번호 형식 검사
@@ -27,7 +27,20 @@ public class UserService {
             throw new IllegalArgumentException("비밀번호 형식이 올바르지 않습니다.");
         }
 
-        // 저장
+        // 비밀번호 암호화 후 저장
+        user.setPw(passwordEncoder.encode(user.getPw()));
         userRepository.save(user);
+    }
+
+    // ✅ 로그인
+    public String login(String id, String pw) {
+        User user = userRepository.findByLoginId(id)
+                .orElseThrow(() -> new IllegalArgumentException("잘못된 아이디 또는 비밀번호입니다."));
+
+        if (!passwordEncoder.matches(pw, user.getPw())) {
+            throw new IllegalArgumentException("잘못된 아이디 또는 비밀번호입니다.");
+        }
+
+        return jwtTokenProvider.generateToken(user.getId());
     }
 }
