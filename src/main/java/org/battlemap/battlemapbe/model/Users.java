@@ -2,7 +2,7 @@ package org.battlemap.battlemapbe.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-feimport org.battlemap.battlemapbe.model.global.BaseEntity;
+import org.battlemap.battlemapbe.model.global.BaseEntity;
 import org.battlemap.battlemapbe.model.mapping.UserLeagues;
 import org.battlemap.battlemapbe.model.mapping.UserOccupyPoints;
 import org.battlemap.battlemapbe.model.mapping.UserOccupyStatus;

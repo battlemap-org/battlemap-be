@@ -33,7 +33,7 @@ public class Quests {
     private Integer rewardPoint; // 리워드 포인트
 
     // 매핑
-    @OneToMany(mappedBy = "userQuests", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "quests", cascade = CascadeType.ALL)
     @Builder.Default
     private List<UserQuests> userQuestsList = new ArrayList<>(); // userquests
 

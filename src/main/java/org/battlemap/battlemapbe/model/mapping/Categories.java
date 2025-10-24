@@ -25,7 +25,7 @@ public class Categories {
     private String categoryName; // 카테고리 이름
 
     // 매핑
-    @OneToMany(mappedBy = "dongs", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "categories", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Stores> StoresList = new ArrayList<>(); // stores
 

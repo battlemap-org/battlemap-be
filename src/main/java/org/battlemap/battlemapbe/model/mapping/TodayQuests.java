@@ -26,7 +26,7 @@ public class TodayQuests {
     private Integer todayPoint; // 오늘의 퀘스트 리워드 포인트
 
     // 매핑
-    @OneToMany(mappedBy = "userQuests", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "todayQuests", cascade = CascadeType.ALL)
     @Builder.Default
     private List<UserQuests> userQuestsList = new ArrayList<>(); // userquests
 }
