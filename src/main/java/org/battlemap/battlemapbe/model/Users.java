@@ -68,4 +68,8 @@ public class Users extends BaseEntity {
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Cities> CitiesList = new ArrayList<>(); // cities
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cityId", nullable = false)
+    private Cities cities; // cities
 }

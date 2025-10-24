@@ -2,6 +2,7 @@ package org.battlemap.battlemapbe.model.mapping;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.battlemap.battlemapbe.model.Quests;
 import org.battlemap.battlemapbe.model.Users;
 
 @Entity
@@ -14,7 +15,7 @@ import org.battlemap.battlemapbe.model.Users;
 public class UserQuests {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "uesrQuestId", nullable = false)
+    @Column(name = "userQuestId", nullable = false)
     private Long userQuestId;
 
     @Column(name = "isCompleted", nullable = false)
@@ -30,9 +31,9 @@ public class UserQuests {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "todayQuestId", nullable = false)
-    private Users todayQuests; // todayquest
+    private TodayQuests todayQuests; // todayquest
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "questId", nullable = false)
-    private UserQuests quests; // quests
+    private Quests quests; // quests
 }

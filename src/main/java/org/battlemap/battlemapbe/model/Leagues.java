@@ -31,11 +31,11 @@ public class Leagues {
     private LocalDateTime endDate; // 리그 종료 일자 및 시간
 
     // 매핑
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "leagues", cascade = CascadeType.ALL)
     @Builder.Default
     private List<UserLeagues> UserLeaguesList = new ArrayList<>(); // userleagues
 
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "leagues", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Cities> CitiesList = new ArrayList<>(); // cities
 }
