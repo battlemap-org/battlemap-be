@@ -2,7 +2,6 @@ package org.battlemap.battlemapbe.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.battlemap.battlemapbe.model.mapping.Categories;
 import org.battlemap.battlemapbe.model.mapping.UserOccupyPoints;
 
 import java.util.ArrayList;

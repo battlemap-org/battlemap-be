@@ -2,7 +2,6 @@ package org.battlemap.battlemapbe.model.mapping;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.battlemap.battlemapbe.model.Dongs;
 import org.battlemap.battlemapbe.model.Stores;
 
 import java.util.ArrayList;
