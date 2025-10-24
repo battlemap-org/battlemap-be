@@ -1,4 +1,4 @@
-package org.battlemap.battlemapbe.global;
+package org.battlemap.battlemapbe.model.global;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
