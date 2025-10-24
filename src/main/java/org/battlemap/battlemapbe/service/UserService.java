@@ -1,7 +1,7 @@
 package org.battlemap.battlemapbe.service;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.model.User;
+import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.repository.UserRepository;
 import org.battlemap.battlemapbe.security.JwtTokenProvider;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,7 +16,7 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     // ✅ 회원가입
-    public void registerUser(User user) {
+    public void registerUser(Users user) {
         // 아이디 중복 검사
         if (userRepository.findByLoginId(user.getId()).isPresent()) {
             throw new IllegalArgumentException("중복된 아이디입니다.");
@@ -34,7 +34,7 @@ public class UserService {
 
     // ✅ 로그인
     public String login(String id, String pw) {
-        User user = userRepository.findByLoginId(id)
+        Users user = userRepository.findByLoginId(id)
                 .orElseThrow(() -> new IllegalArgumentException("잘못된 아이디 또는 비밀번호입니다."));
 
         if (!passwordEncoder.matches(pw, user.getPw())) {

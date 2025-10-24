@@ -1,7 +1,7 @@
 package org.battlemap.battlemapbe.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.model.User;
+import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +17,7 @@ public class UserController {
 
     // ✅ 회원가입
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
+    public ResponseEntity<?> registerUser(@RequestBody Users user) {
         try {
             userService.registerUser(user);
             return ResponseEntity.ok(Map.of("message", "회원가입 성공"));
@@ -30,7 +30,7 @@ public class UserController {
 
     // ✅ 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
+    public ResponseEntity<?> login(@RequestBody Users user) {
         try {
             // UserService에서 로그인 처리 + JWT 발급
             String token = userService.login(user.getId(), user.getPw());
