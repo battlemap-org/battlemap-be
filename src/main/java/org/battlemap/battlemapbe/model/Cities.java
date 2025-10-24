@@ -2,7 +2,7 @@ package org.battlemap.battlemapbe.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.battlemap.battlemapbe.model.mapping.UserOccupyPoints;
+import org.battlemap.battlemapbe.model.mapping.UserCities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,19 +23,15 @@ public class Cities {
     @Column(name = "cityName", nullable = false, length = 20)
     private String cityName; // 도시 이름
 
-    @Column(name = "isActive", nullable = false)
-    private Boolean isActive; // 도시 활성화 여부(사용자 선택) 0 : 비활성화 1 : 활성화
+    @Column(name = "cityLeague", nullable = false, length = 50)
+    private String cityLeague; // 속한 리그 이름
 
     // 매핑
     @OneToMany(mappedBy = "cities", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Dongs> DongsList = new ArrayList<>(); // dongs
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId", nullable = false)
-    private Users users; // users
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "leagueId", nullable = false)
-    private Leagues leagues; // leagues
+    @OneToMany(mappedBy = "cities", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<UserCities> UserCitiesList = new ArrayList<>(); // usercities
 }

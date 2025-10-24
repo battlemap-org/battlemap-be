@@ -34,8 +34,4 @@ public class Leagues {
     @OneToMany(mappedBy = "leagues", cascade = CascadeType.ALL)
     @Builder.Default
     private List<UserLeagues> UserLeaguesList = new ArrayList<>(); // userleagues
-
-    @OneToMany(mappedBy = "leagues", cascade = CascadeType.ALL)
-    @Builder.Default
-    private List<Cities> CitiesList = new ArrayList<>(); // cities
 }

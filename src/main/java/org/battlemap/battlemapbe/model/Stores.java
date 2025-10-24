@@ -32,8 +32,4 @@ public class Stores {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoryId", nullable = false)
     private Categories categories; // categories
-
-    @OneToMany(mappedBy = "stores", cascade = CascadeType.ALL)
-    @Builder.Default
-    private List<Stores> storesList = new ArrayList<>(); // stores
 }

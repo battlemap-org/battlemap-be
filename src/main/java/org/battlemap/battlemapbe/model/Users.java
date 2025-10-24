@@ -3,10 +3,7 @@ package org.battlemap.battlemapbe.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.battlemap.battlemapbe.model.global.BaseEntity;
-import org.battlemap.battlemapbe.model.mapping.UserLeagues;
-import org.battlemap.battlemapbe.model.mapping.UserOccupyPoints;
-import org.battlemap.battlemapbe.model.mapping.UserOccupyStatus;
-import org.battlemap.battlemapbe.model.mapping.UserQuests;
+import org.battlemap.battlemapbe.model.mapping.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +34,6 @@ public class Users extends BaseEntity {
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email; // 이메일
 
-    @Column(name = "cityId", nullable = false)
-    private int cityId; // 시/군 ID
-
     // 매핑
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
@@ -63,13 +57,5 @@ public class Users extends BaseEntity {
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserLeagues> UserLeaguesList = new ArrayList<>(); // userleagues
-
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
-    @Builder.Default
-    private List<Cities> CitiesList = new ArrayList<>(); // cities
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cityId", nullable = false)
-    private Cities cities; // cities
+    private List<UserCities> UserCitiesList = new ArrayList<>(); // usercities
 }

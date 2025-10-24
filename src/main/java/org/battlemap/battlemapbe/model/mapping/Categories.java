@@ -28,8 +28,4 @@ public class Categories {
     @OneToMany(mappedBy = "categories", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Stores> StoresList = new ArrayList<>(); // stores
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "dongId", nullable = false)
-    private Dongs dongs; // dongs
 }

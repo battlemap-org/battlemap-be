@@ -31,10 +31,6 @@ public class Dongs {
 
     @OneToMany(mappedBy = "dongs", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<Categories> CategoriesList = new ArrayList<>(); // categories
-
-    @OneToMany(mappedBy = "dongs", cascade = CascadeType.ALL)
-    @Builder.Default
     private List<Stores> StoresList = new ArrayList<>(); // stores
 
     @ManyToOne(fetch = FetchType.LAZY)

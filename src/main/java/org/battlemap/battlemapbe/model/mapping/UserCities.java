@@ -2,26 +2,30 @@ package org.battlemap.battlemapbe.model.mapping;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.battlemap.battlemapbe.model.Cities;
 import org.battlemap.battlemapbe.model.Users;
 
 @Entity
-@Table(name = "occupystatus")
+@Table(name = "usercities")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserOccupyStatus {
+public class UserCities {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "occupyId", nullable = false)
-    private Long occupyId;
+    private Long userCityId;
 
-    @Column(name = "occupyDongName", nullable = false, length = 20)
-    private String occupyDongName; // 점령 지역 이름
+    @Column(name = "isActive", nullable = false)
+    private Boolean isActive; // 도시 활성화 여부(사용자 선택)
 
     // 매핑
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId", nullable = false)
     private Users users; // users
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cityId", nullable = false)
+    private Cities cities; // cities
 }
