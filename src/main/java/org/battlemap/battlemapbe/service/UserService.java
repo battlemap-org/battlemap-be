@@ -21,8 +21,12 @@ public class UserService {
         if (userRepository.findByLoginId(user.getId()).isPresent()) {
             throw new IllegalArgumentException("중복된 아이디입니다.");
         }
+        // 🔍 비밀번호 null 체크 추가
+        if (user.getPw() == null || user.getPw().isEmpty()) {
+            throw new IllegalArgumentException("비밀번호를 입력해주세요.");
+        }
 
-        // 비밀번호 형식 검사
+        // 🔍 형식 검사
         if (!user.getPw().matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&]).{8,}$")) {
             throw new IllegalArgumentException("비밀번호 형식이 올바르지 않습니다.");
         }

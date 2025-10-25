@@ -19,8 +19,8 @@ public class UserLeagues {
     @Column(name = "userLeagueId", nullable = false)
     private Long userLeagueId;
 
-    @Column(name = "rank", nullable = false)
-    private Integer rank; // 사용자 랭킹
+    @Column(name = "user_rank", nullable = false)
+    private Integer userRank;
 
     @Column(name = "leaguePoint", nullable = false)
     private Integer leaguePoint; // 사용자의 리그 포인트
