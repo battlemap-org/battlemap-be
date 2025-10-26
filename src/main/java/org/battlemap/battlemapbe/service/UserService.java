@@ -2,8 +2,10 @@ package org.battlemap.battlemapbe.service;
 
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.model.Users;
+import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.repository.UserRepository;
 import org.battlemap.battlemapbe.security.JwtTokenProvider;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,16 +21,16 @@ public class UserService {
     public void registerUser(Users user) {
         // 아이디 중복 검사
         if (userRepository.findByLoginId(user.getId()).isPresent()) {
-            throw new IllegalArgumentException("중복된 아이디입니다.");
+            throw new CustomException("USER_409", "중복된 아이디입니다.", HttpStatus.CONFLICT);
         }
         // 비밀번호 null 체크 추가
         if (user.getPw() == null || user.getPw().isEmpty()) {
-            throw new IllegalArgumentException("비밀번호를 입력해주세요.");
+            throw new CustomException("USER_400", "비밀번호를 입력해주세요.", HttpStatus.BAD_REQUEST);
         }
 
         // 형식 검사
         if (!user.getPw().matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&]).{8,}$")) {
-            throw new IllegalArgumentException("비밀번호 형식이 올바르지 않습니다.");
+            throw new CustomException("USER_400", "비밀번호 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST);
         }
 
         // 비밀번호 암호화 후 저장
@@ -39,10 +41,10 @@ public class UserService {
     // 로그인
     public String login(String id, String pw) {
         Users user = userRepository.findByLoginId(id)
-                .orElseThrow(() -> new IllegalArgumentException("잘못된 아이디 또는 비밀번호입니다."));
+                .orElseThrow(() -> new CustomException("USER_400", "잘못된 아이디 또는 비밀번호입니다.", HttpStatus.NOT_FOUND));
 
         if (!passwordEncoder.matches(pw, user.getPw())) {
-            throw new IllegalArgumentException("잘못된 아이디 또는 비밀번호입니다.");
+            throw new CustomException("USER_400", "잘못된 아이디 또는 비밀번호입니다.", HttpStatus.NOT_FOUND);
         }
 
         // JWT 토큰 생성
