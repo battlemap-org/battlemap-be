@@ -28,12 +28,16 @@ public class Users extends BaseEntity {
     @Column(name = "name", nullable = false, length = 20)
     private String name; // 이름
 
-    @Column(name = "pw", nullable = false)
-    private String pw; // 비밀번호
+    // ✅ 비밀번호 (BCrypt 암호화되어 저장됨)
+    @Column(name = "pw", nullable = false, length = 255)
+    private String pw;
 
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email; // 이메일
 
+    // ✅ JWT 토큰 저장용 컬럼 추가
+    @Column(name = "token", length = 512)
+    private String token; // 로그인 시 발급된 JWT 저장
     // 매핑
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default

@@ -45,6 +45,14 @@ public class UserService {
             throw new IllegalArgumentException("잘못된 아이디 또는 비밀번호입니다.");
         }
 
-        return jwtTokenProvider.generateToken(user.getId());
+        // JWT 토큰 생성
+        String token = jwtTokenProvider.generateToken(user.getId());
+
+        // 토큰을 DB에 저장
+        user.setToken(token);
+        userRepository.save(user);
+
+        // 프론트로 토큰 반환
+        return token;
     }
 }
