@@ -15,18 +15,18 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    // ✅ 회원가입
+    // 회원가입
     public void registerUser(Users user) {
         // 아이디 중복 검사
         if (userRepository.findByLoginId(user.getId()).isPresent()) {
             throw new IllegalArgumentException("중복된 아이디입니다.");
         }
-        // 🔍 비밀번호 null 체크 추가
+        // 비밀번호 null 체크 추가
         if (user.getPw() == null || user.getPw().isEmpty()) {
             throw new IllegalArgumentException("비밀번호를 입력해주세요.");
         }
 
-        // 🔍 형식 검사
+        // 형식 검사
         if (!user.getPw().matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&]).{8,}$")) {
             throw new IllegalArgumentException("비밀번호 형식이 올바르지 않습니다.");
         }
@@ -36,7 +36,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // ✅ 로그인
+    // 로그인
     public String login(String id, String pw) {
         Users user = userRepository.findByLoginId(id)
                 .orElseThrow(() -> new IllegalArgumentException("잘못된 아이디 또는 비밀번호입니다."));

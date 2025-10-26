@@ -15,7 +15,7 @@ public class UserController {
 
     private final UserService userService;
 
-    // ✅ 회원가입
+    // 회원가입
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody Users user) {
         try {
@@ -28,7 +28,7 @@ public class UserController {
         }
     }
 
-    // ✅ 로그인
+    // 로그인
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Users user) {
         try {
@@ -38,7 +38,7 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("{\"error\": \"" + e.getMessage() + "\"}");
         } catch (Exception e) {
-            e.printStackTrace(); // 🔍 실제 예외 로그 확인용
+            e.printStackTrace(); // 실제 예외 로그 확인용
             return ResponseEntity.internalServerError().body("{\"error\": \"서버 오류\"}");
         }
     }
