@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Spring Boot secret configuration
+src/main/resources/application.properties
+
