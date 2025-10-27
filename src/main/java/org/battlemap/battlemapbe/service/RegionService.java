@@ -62,7 +62,7 @@ public class RegionService {
                                     .build();
 
                             regionRepository.save(region);
-                            System.out.println("✅ 저장 완료: " + name + " (" + latitude + ", " + longitude + ")");
+                            System.out.println(" 저장 완료: " + name + " (" + latitude + ", " + longitude + ")");
                         } else {
                             System.out.println("⚠ 주소 데이터 없음: " + name);
                         }
@@ -71,7 +71,7 @@ public class RegionService {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("❌ [" + name + "] 카카오 API 호출 실패: " + e.getMessage());
+                System.err.println(" [" + name + "] 카카오 API 호출 실패: " + e.getMessage());
             }
         }
     }
