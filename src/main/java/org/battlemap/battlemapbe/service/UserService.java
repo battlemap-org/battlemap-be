@@ -23,6 +23,10 @@ public class UserService {
         if (userRepository.findByLoginId(user.getId()).isPresent()) {
             throw new CustomException("USER_409", "중복된 아이디입니다.", HttpStatus.CONFLICT);
         }
+        // ✅ 이메일 중복 검사
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new CustomException("USER_409", "이미 등록된 이메일입니다.", HttpStatus.CONFLICT);
+        }
         // 비밀번호 null 체크 추가
         if (user.getPw() == null || user.getPw().isEmpty()) {
             throw new CustomException("USER_400", "비밀번호를 입력해주세요.", HttpStatus.BAD_REQUEST);
