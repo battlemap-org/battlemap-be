@@ -2,6 +2,8 @@ package org.battlemap.battlemapbe.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.battlemap.battlemapbe.model.exception.CustomException;  // ✅ 추가
+import org.springframework.http.HttpStatus;                      // ✅ 추가
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -30,7 +32,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // 🔹 토큰 검증
+    //  토큰 검증 — 만료되면 CustomException 발생
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -39,12 +41,13 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
-            System.out.println("⚠️ JWT expired: " + e.getMessage());
+            // 🔥 JWT 만료 시 백엔드에서 직접 메시지 전송
+            throw new CustomException("TOKEN_401", "로그인이 만료되었습니다. 다시 로그인해주세요.", HttpStatus.UNAUTHORIZED);
         } catch (JwtException | IllegalArgumentException e) {
-            System.out.println("⚠️ Invalid JWT: " + e.getMessage());
+            throw new CustomException("TOKEN_401", "유효하지 않은 토큰입니다.", HttpStatus.UNAUTHORIZED);
         }
-        return false;
     }
+
 
     // 🔹 토큰에서 userId 추출
     public String getUserIdFromToken(String token) {
