@@ -57,4 +57,10 @@ public class UserService {
         // 프론트로 토큰 반환
         return token;
     }
+
+    public Users getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException("USER_404", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+    }
+
 }

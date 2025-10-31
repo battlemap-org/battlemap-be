@@ -38,6 +38,10 @@ public class Users extends BaseEntity {
     // ✅ JWT 토큰 저장용 컬럼 추가
     @Column(name = "token", length = 512)
     private String token; // 로그인 시 발급된 JWT 저장
+
+    @Column(name = "point", nullable = false)
+    private int point = 0; // 기본값 0
+
     // 매핑
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
