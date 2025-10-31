@@ -21,6 +21,7 @@ public class QuestService {
     private final QuestsRepository questsRepository;
     private final StoreRepository storeRepository;
 
+
     // 가게별 퀘스트 목록 조회
     public List<QuestWithStoreDto> getQuestsByStoreId(Long storeId) {
         // 가게 존재 여부 확인
