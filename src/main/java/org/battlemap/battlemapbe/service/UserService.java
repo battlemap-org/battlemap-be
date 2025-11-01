@@ -61,6 +61,7 @@ public class UserService {
         // 프론트로 토큰 반환
         return token;
     }
+<<<<<<< HEAD
     public int getUserPoints(String userId) {
         Users user = userRepository.findByLoginId(userId)
                 .orElseThrow(() -> new CustomException(
@@ -74,4 +75,27 @@ public class UserService {
 
 
 
+=======
+
+    // 로그아웃
+    public void logout(String token) {
+        // Bearer 제거
+        String accessToken = token.replace("Bearer ", "");
+
+        // 토큰 유효성 검사
+        if (!jwtTokenProvider.validateToken(accessToken)) {
+            throw new CustomException("TOKEN_401", "유효하지 않은 토큰입니다.", HttpStatus.UNAUTHORIZED);
+        }
+
+        // 토큰에서 사용자 ID 추출
+        String userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+
+        // 해당 사용자의 토큰 무효화(DB에서 삭제)
+        Users user = userRepository.findByLoginId(userId)
+                .orElseThrow(() -> new CustomException("USER_404", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        user.setToken(null);  // DB에 저장된 토큰 삭제
+        userRepository.save(user);
+    }
+>>>>>>> origin/feat/logout
 }
