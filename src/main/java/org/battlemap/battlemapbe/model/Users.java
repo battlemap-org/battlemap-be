@@ -17,55 +17,53 @@ import java.util.List;
 @Builder
 public class Users extends BaseEntity {
 
-    // PK (DB 내부 식별자)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_Id", nullable = false)
-    private Long userId;   // 자동 증가 PK (auto_increment)
+    @Column(name = "userId", nullable = false)
+    private Long userId; // DB의 기본키 (자동 증가)
 
-    // 로그인용 아이디 (사용자 입력, 중복 방지)
     @Column(name = "id", nullable = false, length = 20, unique = true)
-    private String id;     // 로그인 시 사용하는 아이디 (UNIQUE)
+    private String id; // 사용자 아이디
 
     @Column(name = "name", nullable = false, length = 20)
-    private String name;
+    private String name; // 이름
 
+    // ✅ 비밀번호 (BCrypt 암호화되어 저장됨)
     @Column(name = "pw", nullable = false, length = 255)
     private String pw;
 
     @Column(name = "email", nullable = false, length = 50, unique = true)
-    private String email;
+    private String email; // 이메일
 
+    // ✅ JWT 토큰 저장용 컬럼 추가
     @Column(name = "token", length = 512)
-    private String token;  // 로그인 시 발급된 JWT 저장
+    private String token; // 로그인 시 발급된 JWT 저장
 
-    //  Wallet 기능에서 사용하는 포인트 필드 추가
-    @Builder.Default
-    @Column(name = "point_balance", nullable = false)
-    private Integer pointBalance = 0;
+    @Column(name = "point", nullable = false)
+    private int point = 0; // 기본값 0
 
-    // 매핑 관계
+    // 매핑
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserQuests> userQuestsList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
-    @Builder.Default
-    private List<UserLeagues> userLeaguesList = new ArrayList<>();
+    private List<UserQuests> userQuestsList = new ArrayList<>(); // userquests
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<Coupons> CouponsList = new ArrayList<>();
+    private List<UserLeagues> userLeaguesList = new ArrayList<>(); // userleagues
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserOccupyPoints> UserOccupyPointsList = new ArrayList<>();
+    private List<Coupons> CouponsList = new ArrayList<>(); // coupons
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserOccupyStatus> UserOccupystatusList = new ArrayList<>();
+    private List<UserOccupyPoints> UserOccupyPointsList = new ArrayList<>(); // useroccupypoints
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserCities> UserCitiesList = new ArrayList<>();
+    private List<UserOccupyStatus> UserOccupystatusList = new ArrayList<>(); // useroccupystatus
+
+    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<UserCities> UserCitiesList = new ArrayList<>(); // usercities
 }
