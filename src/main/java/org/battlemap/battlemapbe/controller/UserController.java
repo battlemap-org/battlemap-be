@@ -1,17 +1,13 @@
 package org.battlemap.battlemapbe.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.dto.Quests.QuestWithStoreDto;
-import org.battlemap.battlemapbe.dto.Users.UserProfileDto;
 import org.battlemap.battlemapbe.model.Users;
-import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.model.response.ApiResponse;
 import org.battlemap.battlemapbe.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -40,24 +36,5 @@ public class UserController {
            ApiResponse.success(Map.of("token", token), 200)
         );
     }
-    // 계정정보 불러오기
-    @GetMapping("/{user_id}")
-    public ResponseEntity<ApiResponse<UserProfileDto>> getUserInfo(@PathVariable("user_id") Long userId) {
-        Users user = userService.getUserById(userId);
-
-        // DB의 user 정보를 DTO로 변환
-        UserProfileDto dto = new UserProfileDto(
-                user.getName(),
-                user.getId(),
-                2650, // point (임시)
-                4,    // rank (임시)
-                125,  // totalQuest (임시)
-                7,    // totalCapture (임시)
-                "카페" // favoriteCategory (임시)
-        );
-
-        return ResponseEntity.ok(ApiResponse.success(dto, 200));
-    }
-
 
 }
