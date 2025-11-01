@@ -57,5 +57,17 @@ public class UserService {
         // 프론트로 토큰 반환
         return token;
     }
+    public int getUserPoints(String userId) {
+        Users user = userRepository.findByLoginId(userId)
+                .orElseThrow(() -> new CustomException(
+                        "USER_NOT_FOUND",
+                        "존재하지 않는 사용자입니다.",
+                        HttpStatus.NOT_FOUND
+                ));
+        return user.getPoint();
+    }
+
+
+
 
 }

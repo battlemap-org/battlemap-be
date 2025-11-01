@@ -1,47 +1,53 @@
 package org.battlemap.battlemapbe.controller;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.model.response.ApiResponse;
-import org.battlemap.battlemapbe.repository.UserRepository;
+import org.battlemap.battlemapbe.security.JwtTokenProvider;
+import org.battlemap.battlemapbe.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/points")
 @RequiredArgsConstructor
 public class PointController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<?>> getUserPoints(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
-     // 보유 포인트 조회 API
-    @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<?>> getUserPoints(@PathVariable Long userId) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new CustomException("UNAUTHORIZED", "토큰이 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
 
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new CustomException("USER_NOT_FOUND", "존재하지 않는 사용자입니다.", HttpStatus.NOT_FOUND)
-                );
+        try {
+            String token = authHeader.substring(7).trim();
+            String userId = jwtTokenProvider.validateAndGetUserId(token);
 
-        PointResponse dto = new PointResponse(
-                user.getUserId(),
-                user.getName(),
-                user.getPoint()
-        );
+            int points = userService.getUserPoints(userId);
 
-        return ResponseEntity.ok(ApiResponse.success(dto, 200));
-    }
+            return ResponseEntity.ok(
+                    ApiResponse.success(
+                            Map.of(
+                                    "userId", userId,
+                                    "points", points
+                            ),
+                            HttpStatus.OK.value()
+                    )
+            );
 
-    @Getter
-    @AllArgsConstructor
-    static class PointResponse {
-        private Long userId;
-        private String name;
-        private int point;
+        } catch (RuntimeException e) {
+            throw new CustomException("INVALID_TOKEN", "유효하지 않은 토큰입니다.", HttpStatus.UNAUTHORIZED);
+
+        } catch (Exception e) {
+            throw new CustomException("SERVER_ERROR", "서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
