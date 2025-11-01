@@ -61,7 +61,7 @@ public class UserService {
         // 프론트로 토큰 반환
         return token;
     }
-<<<<<<< HEAD
+
     public int getUserPoints(String userId) {
         Users user = userRepository.findByLoginId(userId)
                 .orElseThrow(() -> new CustomException(
@@ -71,11 +71,6 @@ public class UserService {
                 ));
         return user.getPoint();
     }
-
-
-
-
-=======
 
     // 로그아웃
     public void logout(String token) {
@@ -97,5 +92,5 @@ public class UserService {
         user.setToken(null);  // DB에 저장된 토큰 삭제
         userRepository.save(user);
     }
->>>>>>> origin/feat/logout
+
 }
