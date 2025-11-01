@@ -31,7 +31,7 @@ public class WalletService {
                 ));
 
         // ✅ 포인트 부족 검증
-        if (user.getPointBalance() == null || user.getPointBalance() < request.getAmount()) {
+        if (user.getPoint() < request.getAmount()) {
             throw new CustomException(
                     "INSUFFICIENT_POINTS",
                     "보유 포인트가 부족합니다.",
@@ -40,7 +40,7 @@ public class WalletService {
         }
 
         // ✅ 포인트 차감
-        user.setPointBalance(user.getPointBalance() - request.getAmount());
+        user.setPoint(user.getPoint() - request.getAmount());
         userRepository.save(user);
 
         // ✅ Wallet 내역 저장
@@ -53,7 +53,7 @@ public class WalletService {
         // ✅ 응답 반환
         return WalletChargeResponse.builder()
                 .message("지역 화폐 충전 성공")
-                .remainingPoint(user.getPointBalance())
+                .remainingPoint(user.getPoint())
                 .build();
     }
 }
