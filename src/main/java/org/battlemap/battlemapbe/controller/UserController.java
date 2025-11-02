@@ -1,16 +1,13 @@
 package org.battlemap.battlemapbe.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.dto.Quests.QuestWithStoreDto;
 import org.battlemap.battlemapbe.model.Users;
-import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.model.response.ApiResponse;
 import org.battlemap.battlemapbe.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -37,6 +34,14 @@ public class UserController {
         String token = userService.login(user.getId(), user.getPw());
         return ResponseEntity.ok(
            ApiResponse.success(Map.of("token", token), 200)
+        );
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<?>> logout(@RequestHeader("Authorization") String token) {
+        userService.logout(token);
+        return ResponseEntity.ok(
+                ApiResponse.success(Map.of("message", "로그아웃 성공"), 200)
         );
     }
 }
