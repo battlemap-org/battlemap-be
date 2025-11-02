@@ -26,36 +26,25 @@ public class RegionController {
         this.regionService = regionService;
     }
 
-    // 전체 시/군 목록 조회 (현재는 부천시만)
-    @GetMapping("/cities")
-    public List<String> getAllCities() {
-        return List.of("부천시");
-    }
-
-    // 시 선택 저장 (테스트용)
-    @PostMapping("/cities/selection")
-    public String saveCitySelection(@RequestParam String cityName) {
-        return "선택된 시: " + cityName;
-    }
-
-    // 사용자별 선택된 시 조회 (예시)
-    @GetMapping("/cities/selection/{userId}")
-    public String getSelectedCity(@PathVariable Long userId) {
-        return "userId " + userId + "의 선택된 시: 부천시";
-    }
-
     // 시 이름으로 DB의 모든 동 목록 반환
     @GetMapping("/{cityName}/dongs")
     public List<Region> getDongsByCity(@PathVariable String cityName) {
         return regionService.getRegionsByCity(cityName);
     }
 
-    // 카테고리 예시 조회
+    // 카테고리 목록 조회
     @GetMapping("/{cityName}/dongs/{dongName}/categories")
-    public List<String> getCategories() {
-        return List.of("FD6 (음식점)", "CE7 (카페)", "CS2 (편의점)");
-    }
+    public List<Map<String, String>> getCategories(
+            @PathVariable String cityName,
+            @PathVariable String dongName) {
 
+        return List.of(
+                Map.of("name", "식당", "code", "FD6"),
+                Map.of("name", "카페", "code", "CE7"),
+                Map.of("name", "문화·체험", "code", "CULTURE"),
+                Map.of("name", "숙박", "code", "AD5")
+        );
+    }
 
 
 }
