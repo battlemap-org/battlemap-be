@@ -25,11 +25,11 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
-      # 4. SSH 키를 Actions 환경에 주입 (webfactory/ssh-agent 사용)
+      # Agent가 등록한 키 파일 경로를 임시로 저장
       - name: Add SSH Key
         uses: webfactory/ssh-agent@v0.5.4
         with:
-          ssh-private-key: ${{ secrets.EC2_KEY_BASE64 }} # Base64로 인코딩된 키 값
+          ssh-private-key: ${{ secrets.EC2_KEY_BASE64 }}
 
       # 5. EC2로 jar 전송
       - name: Copy jar to EC2
@@ -37,7 +37,8 @@ jobs:
         with:
           host: 3.35.246.97
           username: ubuntu
-          key: ${{ secrets.EC2_KEY }}
+          key_path: /home/runner/.ssh/id_rsa
+
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
 
@@ -48,7 +49,7 @@ jobs:
         with:
           host: 3.35.246.97
           username: ubuntu
-          key: ""
+          key_path: /home/runner/.ssh/id_rsa
 
           script: |
             export DB_URL="jdbc:mysql://battlemap-server.clkuus6o63hk.ap-northeast-2.rds.amazonaws.com/battlemap_db"
