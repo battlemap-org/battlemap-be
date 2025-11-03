@@ -25,9 +25,7 @@ public class RegionService {
         this.regionRepository = regionRepository;
     }
 
-    /**
-     *  카카오 API를 호출하여 행정동 좌표를 DB에 저장
-     */
+    // 카카오 api 활용, 행정 좌표 DB에 저장
     public void saveRegionsFromKakao(List<String> regionNames) {
         for (String name : regionNames) {
             try {
@@ -76,12 +74,12 @@ public class RegionService {
         }
     }
 
-    /**  전체 지역 조회 */
+    // 전체 지역 조회
     public List<Region> getAllRegions() {
         return regionRepository.findAll();
     }
 
-    /**  특정 시/군명으로 지역 목록 조회 (예: "부천시") */
+    // 특정 시/군명으로 조회 (예: 부천시)
     public List<Region> getRegionsByCity(String cityName) {
         return regionRepository.findByNameContaining(cityName);
     }
