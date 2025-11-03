@@ -25,19 +25,21 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
-      # 4. PEM 키 복원 (Ubuntu Actions 환경용)
-      - name: Restore PEM key
-        run: |
-          echo "${{ secrets.EC2_KEY_BASE64 }}" | base64 -d > ~/ec2_key.pem
-          chmod 600 ~/ec2_key.pem
+      # 4. SSH 키를 Actions 환경에 주입 (webfactory/ssh-agent 사용)
+      - name: Add SSH Key
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.EC2_KEY_BASE64 }} # Base64로 인코딩된 키 값
 
-      # 5. EC2로 jar 전송
+      # 5. EC2로 jar 전송 (appleboy/scp-action은 그대로 사용)
       - name: Copy jar to EC2
         uses: appleboy/scp-action@v0.1.3
         with:
           host: 3.35.246.97
           username: ubuntu
-          key: ~/ec2_key.pem
+          # key 대신 key_host를 사용하며, 주입된 키를 활용합니다.
+          # key: ~/ec2_key.pem  <-- 삭제
+          key_host: 3.35.246.97
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
 
@@ -47,13 +49,19 @@ jobs:
         with:
           host: 3.35.246.97
           username: ubuntu
-          key: ~/ec2_key.pem
+          # key 대신 key_host를 사용하며, 주입된 키를 활용합니다.
+          # key: ~/ec2_key.pem  <-- 삭제
+          key_host: 3.35.246.97
           script: |
+            # 이 환경 변수들은 DB 연결 성공/실패와는 별개로 실행됩니다.
             export DB_URL="jdbc:mysql://battlemap-server.clkuus6o63hk.ap-northeast-2.rds.amazonaws.com/battlemap_db"
             export DB_USERNAME="battlemap_user"
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
             export KAKAO_API_KEY="${{ secrets.KAKAO_API_KEY }}"
 
+            # 기존 프로세스 종료
             pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
+            
+            # log.out 파일 초기화 후 새 앱 실행
+            > /home/ubuntu/log.out
             nohup java -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 &
-    
