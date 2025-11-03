@@ -4,6 +4,7 @@ import org.battlemap.battlemapbe.entity.Region;
 import org.battlemap.battlemapbe.service.RegionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +30,9 @@ public class RegionController {
 
     // 시 이름으로 DB의 모든 동 목록 반환
     @GetMapping("/{cityName}/dongs")
-    public ResponseEntity<List<Region>> getDongsByCity(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String cityName) {
-        if (userDetails == null) {
+    public ResponseEntity<List<Region>> getDongsByCity(Authentication authentication, @PathVariable String cityName) {
+        String userId = authentication.getName();
+        if (userId == null) {
             return ResponseEntity.status(401).build();
         }
 
@@ -41,11 +43,12 @@ public class RegionController {
     // 카테고리 목록 조회
     @GetMapping("/{cityName}/dongs/{dongName}/categories")
     public ResponseEntity<List<Map<String, String>>> getCategories(
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             @PathVariable String cityName,
             @PathVariable String dongName) {
 
-        if (userDetails == null) {
+        String userId =  authentication.getName();
+        if (userId == null) {
             return ResponseEntity.status(401).build();
         }
 
