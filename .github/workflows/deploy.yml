@@ -25,7 +25,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
-      # Agent가 등록한 키 파일 경로를 임시로 저장
+      # 4. SSH 키 추가
       - name: Add SSH Key
         uses: webfactory/ssh-agent@v0.5.4
         with:
@@ -37,24 +37,41 @@ jobs:
         with:
           host: 3.35.246.97
           username: ubuntu
-          key: ${{ secrets.EC2_KEY }}
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
 
-
-      # 6. EC2에서 기존 앱 종료 + 새 jar 실행
-      - name: Restart App
+      # 6. EC2에서 systemd 서비스 등록/재시작
+      - name: Deploy as systemd service
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: 3.35.246.97
           username: ubuntu
-          key: ${{ secrets.EC2_KEY }}
           script: |
-            export DB_URL="jdbc:mysql://battlemap-server.clkuus6o63hk.ap-northeast-2.rds.amazonaws.com/battlemap_db"
-            export DB_USERNAME="battlemap_user"
-            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-            export KAKAO_API_KEY="${{ secrets.KAKAO_API_KEY }}"
+            SERVICE_FILE=/etc/systemd/system/battlemap-be.service
 
-            pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
-            > /home/ubuntu/log.out
-            nohup java -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 &
+            # 서비스 파일 생성
+            sudo tee $SERVICE_FILE > /dev/null <<EOF
+            [Unit]
+            Description=Battlemap BE Service
+            After=network.target
+
+            [Service]
+            User=ubuntu
+            WorkingDirectory=/home/ubuntu
+            ExecStart=/usr/bin/java -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
+            Restart=always
+            RestartSec=10
+            Environment="DB_URL=jdbc:mysql://battlemap-server.clkuus6o63hk.ap-northeast-2.rds.amazonaws.com/battlemap_db"
+            Environment="DB_USERNAME=battlemap_user"
+            Environment="DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
+            Environment="KAKAO_API_KEY=${{ secrets.KAKAO_API_KEY }}"
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+
+            # systemd 적용 및 재시작
+            sudo systemctl daemon-reload
+            sudo systemctl enable battlemap-be
+            sudo systemctl restart battlemap-be
+            sudo systemctl status battlemap-be --no-pager
