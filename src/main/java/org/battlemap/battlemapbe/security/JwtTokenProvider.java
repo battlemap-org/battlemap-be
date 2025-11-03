@@ -13,7 +13,9 @@ import java.util.Date;
 public class JwtTokenProvider {
 
     // JWT 키는 애플리케이션 시작 시 한 번만 생성
-    private final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final String secretKeyString = "very-secret-key-should-be-long-enough";
+    private final SecretKey secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes());
+
     private final long validityInMilliseconds = 1000L * 60 * 60; // 1시간
 
     // 토큰 생성
