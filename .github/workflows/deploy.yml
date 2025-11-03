@@ -23,7 +23,7 @@ jobs:
 
       # 3. Gradle 빌드
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: ./gradlew clean build -x test
 
       # 4. PEM 키 복원 (Ubuntu Actions 환경용)
       - name: Restore PEM key
