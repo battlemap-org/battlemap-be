@@ -21,7 +21,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # 3. Gradle 빌드 (테스트 건너뛰기)
+      # 3. Gradle 빌드
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
