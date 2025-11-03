@@ -30,13 +30,13 @@ public class UserController {
     // 로그인
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Map<String, String>>> login(@RequestBody Users user) {
-        // UserService에서 로그인 처리 + JWT 발급
         String token = userService.login(user.getId(), user.getPw());
         return ResponseEntity.ok(
-           ApiResponse.success(Map.of("token", token), 200)
+                ApiResponse.success(Map.of("token", token), 200)
         );
     }
 
+    // 로그아웃 api
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<?>> logout(@RequestHeader("Authorization") String token) {
         userService.logout(token);

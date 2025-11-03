@@ -39,31 +39,33 @@ public class Users extends BaseEntity {
     @Column(name = "token", length = 512)
     private String token; // 로그인 시 발급된 JWT 저장
 
+    // ✅ 포인트 필드 (기본값 0)
+    @Builder.Default
     @Column(name = "point", nullable = false)
-    private int point = 0; // 기본값 0
+    private int point = 0;
 
-    // 매핑
+    // ✅ 매핑 관계들
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserQuests> userQuestsList = new ArrayList<>(); // userquests
-
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
-    @Builder.Default
-    private List<UserLeagues> userLeaguesList = new ArrayList<>(); // userleagues
+    private List<UserQuests> userQuestsList = new ArrayList<>();
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<Coupons> CouponsList = new ArrayList<>(); // coupons
+    private List<UserLeagues> userLeaguesList = new ArrayList<>();
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserOccupyPoints> UserOccupyPointsList = new ArrayList<>(); // useroccupypoints
+    private List<Coupons> CouponsList = new ArrayList<>();
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserOccupyStatus> UserOccupystatusList = new ArrayList<>(); // useroccupystatus
+    private List<UserOccupyPoints> UserOccupyPointsList = new ArrayList<>();
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserCities> UserCitiesList = new ArrayList<>(); // usercities
+    private List<UserOccupyStatus> UserOccupystatusList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<UserCities> UserCitiesList = new ArrayList<>();
 }

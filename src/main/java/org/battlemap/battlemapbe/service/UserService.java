@@ -23,16 +23,17 @@ public class UserService {
         if (userRepository.findByLoginId(user.getId()).isPresent()) {
             throw new CustomException("USER_409", "중복된 아이디입니다.", HttpStatus.CONFLICT);
         }
-        // ✅ 이메일 중복 검사
+
+        // 이메일 중복 검사
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new CustomException("USER_409", "이미 등록된 이메일입니다.", HttpStatus.CONFLICT);
         }
-        // 비밀번호 null 체크 추가
+
+        // 비밀번호 검사
         if (user.getPw() == null || user.getPw().isEmpty()) {
             throw new CustomException("USER_400", "비밀번호를 입력해주세요.", HttpStatus.BAD_REQUEST);
         }
 
-        // 형식 검사
         if (!user.getPw().matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&]).{8,}$")) {
             throw new CustomException("USER_400", "비밀번호 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST);
         }
@@ -45,57 +46,53 @@ public class UserService {
     // 로그인
     public String login(String id, String pw) {
         Users user = userRepository.findByLoginId(id)
-                .orElseThrow(() -> new CustomException("USER_400", "잘못된 아이디 또는 비밀번호입니다.", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new CustomException("USER_404", "잘못된 아이디 또는 비밀번호입니다.", HttpStatus.NOT_FOUND));
 
         if (!passwordEncoder.matches(pw, user.getPw())) {
-            throw new CustomException("USER_400", "잘못된 아이디 또는 비밀번호입니다.", HttpStatus.NOT_FOUND);
+            throw new CustomException("USER_401", "잘못된 아이디 또는 비밀번호입니다.", HttpStatus.UNAUTHORIZED);
         }
 
-        // JWT 토큰 생성
+        // JWT 토큰 생성 및 저장
         String token = jwtTokenProvider.generateToken(user.getId());
-
-        // 토큰을 DB에 저장
         user.setToken(token);
         userRepository.save(user);
 
-        // 프론트로 토큰 반환
         return token;
     }
-<<<<<<< HEAD
-    public int getUserPoints(String userId) {
-        Users user = userRepository.findByLoginId(userId)
-                .orElseThrow(() -> new CustomException(
-                        "USER_NOT_FOUND",
-                        "존재하지 않는 사용자입니다.",
-                        HttpStatus.NOT_FOUND
-                ));
+
+    // 포인트 조회
+    public int getUserPoints(String loginId) {
+        Users user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "존재하지 않는 사용자입니다.", HttpStatus.NOT_FOUND));
         return user.getPoint();
     }
 
-
-
-
-=======
-
     // 로그아웃
     public void logout(String token) {
-        // Bearer 제거
-        String accessToken = token.replace("Bearer ", "");
-
-        // 토큰 유효성 검사
-        if (!jwtTokenProvider.validateToken(accessToken)) {
-            throw new CustomException("TOKEN_401", "유효하지 않은 토큰입니다.", HttpStatus.UNAUTHORIZED);
+        // Bearer 제거 및 토큰 유효성 검증
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new CustomException("TOKEN_400", "토큰 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST);
         }
 
-        // 토큰에서 사용자 ID 추출
-        String userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+        String accessToken = token.substring(7);
+        String userId;
 
-        // 해당 사용자의 토큰 무효화(DB에서 삭제)
+        // 토큰으로부터 userId 추출
+        try {
+            userId = jwtTokenProvider.validateAndGetUserId(accessToken);
+        } catch (RuntimeException e) {
+            throw new CustomException("TOKEN_401", "유효하지 않거나 만료된 토큰입니다.", HttpStatus.UNAUTHORIZED);
+        }
+
         Users user = userRepository.findByLoginId(userId)
                 .orElseThrow(() -> new CustomException("USER_404", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        user.setToken(null);  // DB에 저장된 토큰 삭제
+        if (user.getToken() == null || !user.getToken().equals(accessToken)) {
+            throw new CustomException("LOGOUT_409", "이미 무효화된 토큰입니다.", HttpStatus.CONFLICT);
+        }
+
+        // 로그아웃 처리
+        user.setToken(null);
         userRepository.save(user);
     }
->>>>>>> origin/feat/logout
 }
