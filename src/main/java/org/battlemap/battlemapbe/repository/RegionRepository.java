@@ -1,6 +1,6 @@
 package org.battlemap.battlemapbe.repository;
 
-import org.battlemap.battlemapbe.entity.Region;
+import org.battlemap.battlemapbe.model.Region;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
