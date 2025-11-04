@@ -1,44 +1,46 @@
 package org.battlemap.battlemapbe.security;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
 
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60; // 1시간
+    // JWT 키는 애플리케이션 시작 시 한 번만 생성
+    private final String secretKeyString = "very-secret-key-should-be-long-enough";
+    private final SecretKey secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes());
 
-    // ✅ 안전한 키 자동 생성 (WeakKeyException 방지)
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final long validityInMilliseconds = 1000L * 60 * 60; // 1시간
 
     // 토큰 생성
     public String generateToken(String userId) {
+        System.out.println("generateToken called for userId = " + userId);
+
+        Claims claims = Jwts.claims().setSubject(userId);
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + EXPIRATION_TIME);
+        Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
-                .setSubject(userId)
+                .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(expiry)
-                .signWith(key)
+                .setExpiration(validity)
+                .signWith(secretKey)
                 .compact();
     }
 
-    // 토큰 검증 + userId 추출
+    // 토큰으로부터 userId
     public String validateAndGetUserId(String token) {
-        try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-            return claims.getSubject();
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new RuntimeException("유효하지 않은 토큰");
-        }
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getSubject();
     }
 }

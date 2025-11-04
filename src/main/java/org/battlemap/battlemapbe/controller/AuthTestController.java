@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/test")
 public class AuthTestController {
 
-    // 🔹 인증된 사용자 정보 확인용
+    // 인증된 사용자 정보 확인용
     @GetMapping("/auth-check")
     public ResponseEntity<?> checkAuth(Authentication authentication) {
         if (authentication == null) {
