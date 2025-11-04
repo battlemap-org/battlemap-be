@@ -48,10 +48,12 @@ public class QuestController {
 
     // 오늘의 퀘스트 조회
     @GetMapping("/{todayQuestId}/today")
-    public ResponseEntity<ApiResponse<TodayQuestDto>> getTodayQuests(@PathVariable Long todayQuestId) {
-        TodayQuestDto todayQuests = questService.getTodayQuestsByQuestId(todayQuestId);
+    public ResponseEntity<ApiResponse<TodayQuestDto>> getTodayQuests(
+            Authentication authentication,
+            @PathVariable Long todayQuestId) {
+        String loginId = authentication.getName();
+        TodayQuestDto todayQuests = questService.getTodayQuestsByQuestId(loginId, todayQuestId);
 
         return ResponseEntity.ok(ApiResponse.success(todayQuests, 200));
     }
-}
 }

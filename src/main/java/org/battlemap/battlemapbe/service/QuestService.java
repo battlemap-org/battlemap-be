@@ -12,6 +12,7 @@ import org.battlemap.battlemapbe.model.mapping.TodayQuests;
 import org.battlemap.battlemapbe.repository.QuestsRepository;
 import org.battlemap.battlemapbe.repository.StoreRepository;
 import org.battlemap.battlemapbe.repository.TodayQuestRepository;
+import org.battlemap.battlemapbe.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ public class QuestService {
     private final QuestsRepository questsRepository;
     private final StoreRepository storeRepository;
     private final TodayQuestRepository todayQuestRepository;
+    private final UserRepository userRepository;
 
 
     // 퀘스트 목록 조회
@@ -63,7 +65,12 @@ public class QuestService {
     }
 
     // 오늘의 퀘스트 조회
-    public TodayQuestDto getTodayQuestsByQuestId(Long todayQuestId) {
+    public TodayQuestDto getTodayQuestsByQuestId(String loginId, Long todayQuestId) {
+        // 사용자 검증
+        userRepository.findByLoginId(loginId)
+                .orElseThrow(() ->
+                        new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
         TodayQuests todayQuest = todayQuestRepository.findById(todayQuestId)
                 // 퀘스트가 없는 경우 - 404
                 .orElseThrow(() -> new CustomException("QUEST_404", "TodayQuest 경로를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));

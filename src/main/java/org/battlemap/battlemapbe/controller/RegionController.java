@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.map;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/regions")
