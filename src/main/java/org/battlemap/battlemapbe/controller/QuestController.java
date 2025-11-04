@@ -3,6 +3,7 @@ package org.battlemap.battlemapbe.controller;
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.dto.Quests.QuestDto;
 import org.battlemap.battlemapbe.dto.Quests.QuestWithStoreDto;
+import org.battlemap.battlemapbe.dto.Quests.TodayQuestDto;
 import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.model.response.ApiResponse;
 import org.battlemap.battlemapbe.service.QuestService;
@@ -44,4 +45,13 @@ public class QuestController {
         QuestDto quest = questService.getQuestsByQuestId(loginId, questId);
         return ResponseEntity.ok(ApiResponse.success(quest, 200));
     }
+
+    // 오늘의 퀘스트 조회
+    @GetMapping("/{todayQuestId}/today")
+    public ResponseEntity<ApiResponse<TodayQuestDto>> getTodayQuests(@PathVariable Long todayQuestId) {
+        TodayQuestDto todayQuests = questService.getTodayQuestsByQuestId(todayQuestId);
+
+        return ResponseEntity.ok(ApiResponse.success(todayQuests, 200));
+    }
+}
 }

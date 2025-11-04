@@ -1,6 +1,6 @@
 package org.battlemap.battlemapbe.service;
 
-import org.battlemap.battlemapbe.entity.Region;
+import org.battlemap.battlemapbe.model.Region;
 import org.battlemap.battlemapbe.repository.RegionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
