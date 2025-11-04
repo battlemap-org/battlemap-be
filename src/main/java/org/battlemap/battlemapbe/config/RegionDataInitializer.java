@@ -2,7 +2,7 @@ package org.battlemap.battlemapbe.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.entity.Region;
+import org.battlemap.battlemapbe.model.Region;
 import org.battlemap.battlemapbe.repository.RegionRepository;
 import org.springframework.stereotype.Component;
 
