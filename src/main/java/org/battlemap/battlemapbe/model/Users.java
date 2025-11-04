@@ -44,6 +44,11 @@ public class Users extends BaseEntity {
     @Column(name = "point", nullable = false)
     private int point = 0;
 
+    // ✅ 지역화폐 잔액
+    @Builder.Default
+    @Column(name = "balance", nullable = false)
+    private Long balance = 0L;
+
     // ✅ 매핑 관계들
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
