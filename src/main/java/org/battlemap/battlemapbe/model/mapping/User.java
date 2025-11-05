@@ -10,7 +10,7 @@ import org.battlemap.battlemapbe.model.global.BaseEntity;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "user_wallets") // ✅ 이름 변경
+@Table(name = "userwallets") // 이름 변경
 public class User extends BaseEntity {
 
     @Id
