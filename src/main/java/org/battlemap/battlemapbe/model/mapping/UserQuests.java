@@ -19,9 +19,10 @@ public class UserQuests {
     private Long userQuestId;
 
     @Column(name = "isCompleted", nullable = false)
-    private Boolean isCompleted; // 미션 완료 여부 0 : 진행 중, 1 : 완료
+    @Builder.Default
+    private Boolean isCompleted = false; // 미션 완료 여부 0 : 진행 중, 1 : 완료
 
-    @Column(name = "userAnswer", nullable = false)
+    @Column(name = "userAnswer")
     private String userAnswer; // 사용자가 제출한 답변
 
     // 매핑
@@ -30,10 +31,10 @@ public class UserQuests {
     private Users users; // user
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "todayQuestId", nullable = false)
+    @JoinColumn(name = "todayQuestId")
     private TodayQuests todayQuests; // todayquest
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "questId", nullable = false)
+    @JoinColumn(name = "questId")
     private Quests quests; // quests
 }
