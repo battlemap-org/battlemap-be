@@ -18,7 +18,7 @@ public class PointController {
 
     private final UserService userService;
 
-    // 사용자 포인트 조회 api
+    // 사용자 포인트 조회
     @GetMapping
     public ResponseEntity<ApiResponse<Map<String, Integer>>> getUserPoints(Authentication authentication) {
         String loginId = authentication.getName();
