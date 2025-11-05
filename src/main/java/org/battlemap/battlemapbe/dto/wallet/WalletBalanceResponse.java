@@ -9,5 +9,5 @@ import lombok.Getter;
 @Builder
 public class WalletBalanceResponse {
     private String loginId;  // 로그인된 사용자 ID
-    private Long balance;    // 보유 지역화폐 잔액
+    private Integer balance;    // 보유 지역화폐 잔액
 }
