@@ -11,7 +11,7 @@ import org.battlemap.battlemapbe.model.global.BaseEntity;
 @AllArgsConstructor
 @Builder
 @Table(name = "userwallets") // 이름 변경
-public class UserWallets extends BaseEntity {
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
