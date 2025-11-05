@@ -70,4 +70,5 @@ jobs:
             
             # 로그 파일 초기화 및 새 앱 백그라운드 실행
             > /home/ubuntu/log.out
-            nohup java -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 &
+            nohup setsid java -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 & disown
+
