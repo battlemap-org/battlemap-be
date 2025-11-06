@@ -126,4 +126,5 @@ public class QuestService {
                 .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
         return userQuestsRepository.countCompletedByDong();
     }
+    
 }
