@@ -1,12 +1,10 @@
 package org.battlemap.battlemapbe.controller;
 
-import org.battlemap.battlemapbe.entity.Region;
+import org.battlemap.battlemapbe.model.Region;
 import org.battlemap.battlemapbe.service.RegionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
