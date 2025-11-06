@@ -23,5 +23,4 @@ public interface UserQuestsRepository extends JpaRepository<UserQuests, Long> {
             "GROUP BY s.dongs.dongId, s.dongs.dongName " +
             "ORDER BY COUNT(uq) DESC")
     List<QuestCountByDongDto> countCompletedByDong();
-
 }
