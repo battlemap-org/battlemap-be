@@ -78,11 +78,11 @@ public class QuestService {
 
     // 퀘스트 답변 제출
     public QuestAnswerResponseDto QuestAnswer(Long questId, String loginId, String userAnswerContent) {
-        // 사용자, 퀘스트 조회
+        // 사용자 검증
         Users user = userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        // 퀘스트 조회
+        // 퀘스트 존재 여부 확인
         Quests quest = questsRepository.findById(questId)
                 .orElseThrow(() -> new CustomException("QUEST_404", "TodayQuest 경로를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
@@ -117,5 +117,13 @@ public class QuestService {
 
         // 응답 DTO 반환
         return QuestAnswerResponseDto.from(isCorrect, reward);
+    }
+
+    // 지역별 완료 미션 개수 조회
+    public List<QuestCountByDongDto> getCompletedCountByDong(String loginId) {
+        // 사용자 검증
+        Users user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+        return userQuestsRepository.countCompletedByDong();
     }
 }
