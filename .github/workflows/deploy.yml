@@ -51,20 +51,26 @@ jobs:
           username: ubuntu
           key_path: deploy_key.pem
           script: |
-            # 1. 포트 사용 중이면 종료
+            # 1. 환경 변수 설정
+            export DB_URL=${{ secrets.DB_URL }}
+            export DB_USERNAME=${{ secrets.DB_USERNAME }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            export KAKAO_API_KEY=${{ secrets.KAKAO_API_KEY }}
+            
+            # 2. 포트 사용 중이면 종료
             if lsof -i :8081; then
               echo ">>> Port 8081 is occupied, killing old process"
               pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
               sleep 3
             fi
-
-            # 2. JAR 파일 존재 확인
+            
+            # 3. JAR 파일 확인
             if [ ! -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar ]; then
               echo ">>> ERROR: JAR file not found!"
               exit 1
             fi
-
-            # 3. 새 앱 실행
+            
+            # 4. 새 앱 실행
             echo ">>> Starting new app"
             nohup java -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 &
             disown
