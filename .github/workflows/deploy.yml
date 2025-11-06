@@ -42,7 +42,7 @@ jobs:
           key_path: deploy_key.pem
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
-          timeout: 300  # 5분까지 허용
+          timeout: 300s  # 5분까지 허용
 
       # 6. EC2에서 기존 프로세스 종료 + 새 JAR 실행
       - name: Restart App on EC2
