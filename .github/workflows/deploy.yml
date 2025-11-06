@@ -55,19 +55,6 @@ jobs:
         with:
           host: 3.35.246.97
           username: ubuntu
-          # 직접 생성한 deploy_key.pem 파일 경로를 key_path로 사용
           key_path: deploy_key.pem
-
           script: |
-            # 환경 변수 설정
-            export DB_URL="jdbc:mysql://battlemap-server.clkuus6o63hk.ap-northeast-2.rds.amazonaws.com/battlemap_db"
-            export DB_USERNAME="battlemap_user"
-            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-            export KAKAO_API_KEY="${{ secrets.KAKAO_API_KEY }}"
-            
-            # 기존 앱 종료
-            pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
-            
-            # 로그 파일 초기화 및 새 앱 백그라운드 실행
-            > /home/ubuntu/log.out
-            nohup setsid java -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 & disown
+            sudo systemctl restart battlemap
