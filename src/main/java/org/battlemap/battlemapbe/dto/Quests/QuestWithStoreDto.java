@@ -18,6 +18,7 @@ public class QuestWithStoreDto {
     private Long storeId;
     private String storeName;
 
+    // 가게별 퀘스트 dto
     public static QuestWithStoreDto of(Quests quest, Stores store) {
         return QuestWithStoreDto.builder()
                 .questId(quest.getQuestId())

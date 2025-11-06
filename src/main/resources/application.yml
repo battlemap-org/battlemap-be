@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: battlemap-be
+
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/battlemap?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+  flyway:
+    enabled: false
+
+server:
+  port: 8080
+  address: 0.0.0.0
+
+kakao:
+  api:
+    key: KakaoAK 3d3afc3209bf25b1df47db8858832841

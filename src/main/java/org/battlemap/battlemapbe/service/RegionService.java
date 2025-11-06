@@ -1,6 +1,6 @@
 package org.battlemap.battlemapbe.service;
 
-import org.battlemap.battlemapbe.entity.Region;
+import org.battlemap.battlemapbe.model.Region;
 import org.battlemap.battlemapbe.repository.RegionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -25,9 +25,7 @@ public class RegionService {
         this.regionRepository = regionRepository;
     }
 
-    /**
-     *  카카오 API를 호출하여 행정동 좌표를 DB에 저장
-     */
+    // 카카오 api 활용, 행정 좌표 DB에 저장
     public void saveRegionsFromKakao(List<String> regionNames) {
         for (String name : regionNames) {
             try {
@@ -62,7 +60,7 @@ public class RegionService {
                                     .build();
 
                             regionRepository.save(region);
-                            System.out.println("✅ 저장 완료: " + name + " (" + latitude + ", " + longitude + ")");
+                            System.out.println(" 저장 완료: " + name + " (" + latitude + ", " + longitude + ")");
                         } else {
                             System.out.println("⚠ 주소 데이터 없음: " + name);
                         }
@@ -71,17 +69,17 @@ public class RegionService {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("❌ [" + name + "] 카카오 API 호출 실패: " + e.getMessage());
+                System.err.println(" [" + name + "] 카카오 API 호출 실패: " + e.getMessage());
             }
         }
     }
 
-    /**  전체 지역 조회 */
+    // 전체 지역 조회
     public List<Region> getAllRegions() {
         return regionRepository.findAll();
     }
 
-    /**  특정 시/군명으로 지역 목록 조회 (예: "부천시") */
+    // 특정 시/군명으로 조회 (예: 부천시)
     public List<Region> getRegionsByCity(String cityName) {
         return regionRepository.findByNameContaining(cityName);
     }

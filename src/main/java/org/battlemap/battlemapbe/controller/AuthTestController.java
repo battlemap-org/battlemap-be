@@ -18,6 +18,7 @@ public class AuthTestController {
     }
 
     /** 토큰이 유효한지 확인 (Authorization: Bearer <token>) */
+    // 인증된 사용자 정보 확인용
     @GetMapping("/auth-check")
     public ResponseEntity<?> checkAuth(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {

@@ -1,6 +1,6 @@
 package org.battlemap.battlemapbe.service;
 
-import org.battlemap.battlemapbe.entity.Region;
+import org.battlemap.battlemapbe.model.Region;
 import org.battlemap.battlemapbe.repository.RegionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -70,9 +70,7 @@ public class StoreService {
         return result;
     }
 
-    /**
-     * 카카오 카테고리 검색
-     */
+    // 카카오 카테고리 검색
     private List<Map<String, Object>> fetchStores(Region region, String regionName, String category) {
         double baseLat = region.getLatitude();
         double baseLng = region.getLongitude();
@@ -136,9 +134,7 @@ public class StoreService {
         return results;
     }
 
-    /**
-     *  키워드 검색 (공방, 체험, 영화관 등)
-     */
+    // 키워드 검색
     private List<Map<String, Object>> fetchKeywordStores(Region region, String regionName, String keyword) {
         double lat = region.getLatitude();
         double lng = region.getLongitude();
@@ -187,9 +183,7 @@ public class StoreService {
         return results;
     }
 
-    /**
-     *  공통 변환 함수
-     */
+    // 공통 변환 함수
     private Map<String, Object> convertDocToStore(Map<String, Object> doc) {
         Map<String, Object> store = new LinkedHashMap<>();
         store.put("id", doc.get("id"));
