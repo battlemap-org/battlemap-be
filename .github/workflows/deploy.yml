@@ -43,10 +43,10 @@ jobs:
         with:
           host: 3.35.246.97
           username: ubuntu
-          # 직접 생성한 deploy_key.pem 파일 경로를 key_path로 사용
           key_path: deploy_key.pem
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
+          target: /home/ubuntu/
+
 
       # 6. EC2에서 기존 앱 종료 + 새 JAR 실행
       - name: Restart App
