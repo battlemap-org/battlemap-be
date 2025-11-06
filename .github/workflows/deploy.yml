@@ -21,19 +21,15 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # 3. Gradle 빌드
+      # 3. Gradle 빌드 (테스트 제외)
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
-      # 4. SSH Key 등록 및 파일 생성 (Base64 디코딩 방식)
+      # 4. SSH Key 등록 및 파일 생성
       - name: Deploy Key Setup
         run: |
           echo "${{ secrets.EC2_KEY }}" | base64 -d > deploy_key.pem
-          
-          # 2. 키 권한 설정
           chmod 600 deploy_key.pem
-          
-          # 3. SSH-Agent에 키 추가 (passphrase가 없어야 성공)
           eval "$(ssh-agent -s)"
           ssh-add deploy_key.pem
 
@@ -47,20 +43,19 @@ jobs:
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
 
-
       # 6. EC2에서 기존 앱 종료 + 새 JAR 실행
       - name: Restart App
         uses: appleboy/ssh-action@v0.1.7
         with:
-            host: 3.35.246.97
-            username: ubuntu
-            key_path: deploy_key.pem
-            script: |
-              echo ">>> Kill old process"
-              pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
-              
-              echo ">>> Start new app"
-              nohup java -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 &
-              disown
-              sleep 5
-              echo ">>> App restarted successfully!"
+          host: 3.35.246.97
+          username: ubuntu
+          key_path: deploy_key.pem
+          script: |
+            echo ">>> Kill old process"
+            pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
+            
+            echo ">>> Start new app"
+            nohup java -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 &
+            disown
+            sleep 5
+            echo ">>> App restarted successfully!"
