@@ -53,8 +53,15 @@ jobs:
       - name: Restart App
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: 3.35.246.97
-          username: ubuntu
-          key_path: deploy_key.pem
-          script: |
-            sudo systemctl restart battlemap
+            host: 3.35.246.97
+            username: ubuntu
+            key_path: deploy_key.pem
+            script: |
+              echo ">>> Kill old process"
+              pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
+              
+              echo ">>> Start new app"
+              nohup java -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 &
+              disown
+              sleep 5
+              echo ">>> App restarted successfully!"
