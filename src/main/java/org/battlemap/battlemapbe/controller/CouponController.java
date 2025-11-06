@@ -1,15 +1,16 @@
 package org.battlemap.battlemapbe.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.dto.coupon.*;
-import org.battlemap.battlemapbe.model.response.ApiResponse; // 너희 경로
+import org.battlemap.battlemapbe.dto.coupon.CouponRedeemRequest;
+import org.battlemap.battlemapbe.dto.coupon.CouponRedeemResponse;
+import org.battlemap.battlemapbe.dto.coupon.CouponView;
 import org.battlemap.battlemapbe.service.CouponService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,22 +19,32 @@ public class CouponController {
 
     private final CouponService couponService;
 
-    // 보유(미사용) 쿠폰 목록
+    // 보유 쿠폰 조회
+    // GET /api/coupons
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CouponView>>> getMyCoupons(Authentication authentication) {
-        String loginId = authentication.getName();
-        var list = couponService.getOwnedCoupons(loginId);
-        return ResponseEntity.ok(ApiResponse.success(list, 200));
+    public ResponseEntity<List<CouponView>> getMyCoupons(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+        String loginId = authentication.getName(); // JWT에서 가져온 로그인 아이디
+        return ResponseEntity.ok(couponService.getMyCoupons(loginId));
     }
 
     // 쿠폰 교환
+    // POST /api/coupons/redeem
     @PostMapping("/redeem")
-    public ResponseEntity<ApiResponse<CouponRedeemResponse>> redeem(
-            Authentication authentication,
-            @Valid @RequestBody CouponRedeemRequest req
-    ) {
+    public ResponseEntity<?> redeem(Authentication authentication,
+                                    @RequestBody CouponRedeemRequest request) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "인증되지 않은 사용자입니다."));
+        }
         String loginId = authentication.getName();
-        var res = couponService.redeem(loginId, req.getCouponId());
-        return ResponseEntity.ok(ApiResponse.success(res, 200));
+        CouponRedeemResponse resp = couponService.redeem(loginId, request);
+
+        if (!resp.isSuccess()) {
+            // 포인트 부족 등
+            return ResponseEntity.status(400).body(resp);
+        }
+        return ResponseEntity.ok(resp);
     }
 }

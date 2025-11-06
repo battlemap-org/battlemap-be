@@ -6,8 +6,9 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class CouponRedeemResponse {
-
-    private int remainingPoints;  // 교환 후 남은 포인트
-    private CouponView coupon;    // 발급된 쿠폰 정보
+    private boolean success;
+    private String message;     // "성공적으로 교환되었습니다." / "포인트가 부족합니다." 등
+    private Integer remainPoint; // 교환 후 남은 포인트
 }

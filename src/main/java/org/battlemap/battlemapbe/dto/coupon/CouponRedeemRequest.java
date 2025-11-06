@@ -1,16 +1,16 @@
 package org.battlemap.battlemapbe.dto.coupon;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CouponRedeemRequest {
-
-    @NotNull(message = "couponId는 필수입니다.")
-    private Long couponId;
+    // 프론트에서 누른 카드 정보를 그대로 내려줌
+    // (예: brand="CU", name="cu 5000원", amount=5000, pointCost=5000)
+    private String brand;
+    private String name;
+    private int amount;
 }

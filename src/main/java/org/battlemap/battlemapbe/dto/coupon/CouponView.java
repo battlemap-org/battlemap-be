@@ -2,13 +2,19 @@ package org.battlemap.battlemapbe.dto.coupon;
 
 import lombok.*;
 
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CouponView {
-    private Long id;        // 사용자 쿠폰 ID
-    private String name;    // 쿠폰명 (예: CU 3000원)
-    private int cost;       // 사용 포인트
-    private String code;    // 발급 코드(보유쿠폰일 때 존재)
-    private String status;  // OWNED / USED / EXPIRED
-    private String partner; // 제휴사 (CU/MEGA/OLIVE 등)
+    private Long couponId;          // 쿠폰 PK
+    private String brand;           // 브랜드 (예: CU, 메가)
+    private String name;            // 쿠폰 이름(라벨)
+    private int amount;         // 금액(원)
+    private String status;          // 상태 (예: OWNED / USED 등)
+    private String code;            // 쿠폰 코드
+    private LocalDateTime issuedAt; // 발급 시각
 }
