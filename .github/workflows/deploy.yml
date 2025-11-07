@@ -43,23 +43,25 @@ jobs:
           key_path: deploy_key.pem
           script: |
             echo ">>> Checking for running app..."
-            RUNNING_PID=$(pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar')
-
+            # 정확한 프로세스만 잡기 위해 grep 필터 강화
+            RUNNING_PID=$(ps -ef | grep 'battlemap-be-0.0.1-SNAPSHOT.jar' | grep -v grep | grep -v ssh | awk '{print $2}')
+            
             if [ -n "$RUNNING_PID" ]; then
-              echo ">>> Found running app with PID $RUNNING_PID. Attempting to stop..."
-              kill "$RUNNING_PID"
-              sleep 3
+            echo ">>> Found running app with PID $RUNNING_PID. Attempting to stop..."
+            kill "$RUNNING_PID"
+            sleep 3
             else
-              echo ">>> No running app found."
+            echo ">>> No running app found."
             fi
-
+            
             echo ">>> Removing old jar..."
             rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
-
+            
             echo ">>> Clean complete"
             exit 0
 
-      # 6. 새 jar 전송
+
+# 6. 새 jar 전송
       - name: Copy new jar to EC2
         uses: appleboy/scp-action@v0.1.3
         with:
