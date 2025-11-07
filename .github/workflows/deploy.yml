@@ -42,19 +42,21 @@ jobs:
           username: ubuntu
           key_path: deploy_key.pem
           script: |
-            echo ">>> Stopping running app..."
-            
-            # **[최종 수정]** pgrep/kill 조합을 사용하되, 메인 셸의 exit 0을 보장
-            # 프로세스가 없든, kill에 의해 종료되든 최종 코드는 0이 되도록 || true와 exit 0을 조합
-            pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' | xargs -r kill -9 || true
-            sleep 3
-            
+            echo ">>> Checking for running app..."
+            RUNNING_PID=$(pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar')
+
+            if [ -n "$RUNNING_PID" ]; then
+              echo ">>> Found running app with PID $RUNNING_PID. Attempting to stop..."
+              kill "$RUNNING_PID"
+              sleep 3
+            else
+              echo ">>> No running app found."
+            fi
+
             echo ">>> Removing old jar..."
-            # JAR 파일 제거
             rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
-            
+
             echo ">>> Clean complete"
-            # 스크립트 마지막에 종료 코드 0을 명시적으로 반환 (가장 중요)
             exit 0
 
       # 6. 새 jar 전송
