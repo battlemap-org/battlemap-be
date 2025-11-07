@@ -44,8 +44,9 @@ jobs:
           script: |
             echo ">>> Stopping running app..."
             
-            # **[핵심 수정]** kill 명령을 서브 셸에서 실행하여 메인 스크립트의 종료 코드를 오염시키지 않도록 합니다.
-            (pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' | xargs -r kill -9) || true
+            # **[최종 수정]** pgrep/kill 조합을 사용하되, 메인 셸의 exit 0을 보장
+            # 프로세스가 없든, kill에 의해 종료되든 최종 코드는 0이 되도록 || true와 exit 0을 조합
+            pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' | xargs -r kill -9 || true
             sleep 3
             
             echo ">>> Removing old jar..."
@@ -53,7 +54,7 @@ jobs:
             rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
             
             echo ">>> Clean complete"
-            # 스크립트 마지막에 종료 코드 0을 명시적으로 반환
+            # 스크립트 마지막에 종료 코드 0을 명시적으로 반환 (가장 중요)
             exit 0
 
       # 6. 새 jar 전송
@@ -66,7 +67,7 @@ jobs:
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
 
-      # 7. 새 앱 실행 및 포트 확인 (파일 체크 및 충분한 대기 시간 포함)
+      # 7. 새 앱 실행 및 포트 확인
       - name: Restart app and check port
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -78,18 +79,16 @@ jobs:
             
             # --- 1. JAR 파일 존재 여부 확인 및 권한 부여 ---
             if [ ! -f "$JAR_PATH" ]; then
-              echo ">>> ❌ ERROR: JAR file not found at $JAR_PATH"
-              # 파일이 없으면 즉시 종료하여 Step 6의 실패를 확인하도록 유도
+              echo ">>> ❌ ERROR: JAR file not found at $JAR_PATH. Copy step failed!"
               exit 1
             fi
 
-            # 파일이 존재하면 실행 권한 부여 (혹시 모를 권한 문제 방지)
+            # 파일이 존재하면 실행 권한 부여
             chmod +x "$JAR_PATH"
             echo ">>> JAR file verified and permissions set."
             
             # --- 2. 앱 실행 ---
             echo ">>> Starting new app..."
-            # 모든 -D 옵션을 따옴표로 감싸고, 한 줄에 이어서 구문 오류 최소화
             nohup java \
               -Dspring.datasource.url="${{ secrets.DB_URL }}" \
               -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
