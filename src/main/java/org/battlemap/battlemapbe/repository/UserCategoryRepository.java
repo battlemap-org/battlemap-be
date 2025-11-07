@@ -1,25 +1,29 @@
 package org.battlemap.battlemapbe.repository;
 
-import org.battlemap.battlemapbe.model.mapping.UserQuests;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface UserCategoryRepository extends JpaRepository<UserQuests, Long> {
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+public class UserCategoryRepository {
 
-    @Query("""
-        SELECT c.categoryName
-        FROM UserQuests uq
-        JOIN uq.quests q
-        JOIN q.stores s
-        JOIN s.categories c
-        WHERE uq.users.id = :userId
-          AND uq.isCompleted = true
-        GROUP BY c.categoryName
-        ORDER BY COUNT(uq.userQuestId) DESC
-    """)
-    List<String> findTopCategoriesByUserId(@Param("userId") Long userId); // ✅ 여기 Long이어야 함
+    @PersistenceContext
+    private EntityManager em;
+
+    @SuppressWarnings("unchecked")
+    public List<Object[]> findTopCategoryByUser(Long userId) {
+        return (List<Object[]>) em.createNativeQuery("""
+            SELECT category_group_name AS category, COUNT(*) AS cnt
+            FROM user_activities
+            WHERE user_id = :userId
+              AND action_type = 'QUEST_COMPLETE'
+            GROUP BY category_group_name
+            ORDER BY cnt DESC
+            LIMIT 1
+        """)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
 }

@@ -1,22 +1,32 @@
 package org.battlemap.battlemapbe.service;
 
 import lombok.RequiredArgsConstructor;
+import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.repository.UserCategoryRepository;
+import org.battlemap.battlemapbe.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class UserCategoryService {
 
+    private final UserRepository userRepository;
     private final UserCategoryRepository userCategoryRepository;
 
+    /**
+     * ✅ 유저별 가장 많이 활동한 카테고리 조회
+     * - user_activities 테이블 기반
+     */
+    @Transactional(readOnly = true)
     public String findMostActiveCategory(String loginId) {
-        // 🔹 실제로 loginId 변수에는 "1", "2" 같은 userId(String)가 들어옵니다.
-        Long userId = Long.parseLong(loginId);
+        Users user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
 
-        return userCategoryRepository.findTopCategoriesByUserId(userId)
+        return userCategoryRepository.findTopCategoryByUser(user.getUserId())
                 .stream()
                 .findFirst()
+                .map(arr -> (String) arr[0]) // category_group_name
                 .orElse("데이터 없음");
     }
 }
