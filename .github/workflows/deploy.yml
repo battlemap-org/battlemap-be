@@ -34,7 +34,7 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add deploy_key.pem
 
-      # 5. EC2에서 기존 프로세스 및 jar 제거 (pkill -> pgrep/kill로 변경하여 종료 안정성 확보)
+      # 5. EC2에서 기존 프로세스 및 jar 제거 (종료 안정성 확보)
       - name: Clean old jar and process
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -56,6 +56,7 @@ jobs:
             fi
             
             echo ">>> Removing old jar..."
+            # JAR 파일이 없을 수도 있으므로 -f 옵션 사용
             rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
             echo ">>> Clean complete"
 
@@ -69,7 +70,7 @@ jobs:
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
 
-      # 7. 새 앱 실행 및 포트 확인 (Sleep 시간 증가 및 sudo ss 사용)
+      # 7. 새 앱 실행 및 포트 확인 (파일 체크 및 충분한 대기 시간 포함)
       - name: Restart app and check port
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -77,6 +78,20 @@ jobs:
           username: ubuntu
           key_path: deploy_key.pem
           script: |
+            JAR_PATH="/home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar"
+            
+            # --- 1. JAR 파일 존재 여부 확인 및 권한 부여 ---
+            if [ ! -f "$JAR_PATH" ]; then
+              echo ">>> ❌ ERROR: JAR file not found at $JAR_PATH"
+              # 파일이 없으면 즉시 종료하여 Step 6의 실패를 확인하도록 유도
+              exit 1
+            fi
+
+            # 파일이 존재하면 실행 권한 부여 (혹시 모를 권한 문제 방지)
+            chmod +x "$JAR_PATH"
+            echo ">>> JAR file verified and permissions set."
+            
+            # --- 2. 앱 실행 ---
             echo ">>> Starting new app..."
             # 모든 -D 옵션을 따옴표로 감싸고, 한 줄에 이어서 구문 오류 최소화
             nohup java \
@@ -85,14 +100,14 @@ jobs:
               -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
               -DKAKAO_API_KEY="${{ secrets.KAKAO_API_KEY }}" \
               -Dserver.port=8081 \
-              -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar \
+              -jar "$JAR_PATH" \
               > /home/ubuntu/log.out 2>&1 &
 
-            # Spring Boot가 충분히 시작할 시간을 줍니다 (최소 15초 권장)
+            # Spring Boot가 충분히 시작할 시간을 줍니다
             sleep 15
             
+            # --- 3. 포트 확인 및 디버깅 로그 출력 ---
             echo ">>> Checking port 8081..."
-            # sudo를 사용하여 프로세스 이름까지 정확하게 확인
             if sudo ss -tulnp | grep 8081; then
               echo ">>> ✅ App is running on port 8081"
             else
