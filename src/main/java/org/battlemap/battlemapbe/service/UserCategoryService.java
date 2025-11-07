@@ -15,8 +15,7 @@ public class UserCategoryService {
     private final UserCategoryRepository userCategoryRepository;
 
     /**
-     * ✅ 유저별 가장 많이 활동한 카테고리 조회
-     * - user_activities 테이블 기반
+     * ✅ 유저별 가장 많이 퀘스트 완료한 카테고리 조회
      */
     @Transactional(readOnly = true)
     public String findMostActiveCategory(String loginId) {
@@ -24,9 +23,7 @@ public class UserCategoryService {
                 .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
 
         return userCategoryRepository.findTopCategoryByUser(user.getUserId())
-                .stream()
-                .findFirst()
-                .map(arr -> (String) arr[0]) // category_group_name
+                .map(result -> (String) result[0]) // category_group_name
                 .orElse("데이터 없음");
     }
 }
