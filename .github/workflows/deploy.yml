@@ -43,22 +43,19 @@ jobs:
           key_path: deploy_key.pem
           script: |
             echo ">>> Stopping running app..."
-            # 실행 중인 프로세스 ID 찾기
-            CURRENT_PID=$(pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar')
             
-            if [ -z "$CURRENT_PID" ]; then
-              echo ">>> App is not running (PID not found)."
-            else
-              echo ">>> Killing process $CURRENT_PID"
-              # 강제 종료 (kill -9) 후, 종료 코드가 0이 아니어도 파이프라인이 멈추지 않도록 || true 추가
-              kill -9 "$CURRENT_PID" || true
-              sleep 3
-            fi
+            # 프로세스 ID를 찾고, 찾으면 강제 종료를 시도합니다.
+            pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' | xargs -r kill -9 || true
+            sleep 3
             
             echo ">>> Removing old jar..."
-            # JAR 파일이 없을 수도 있으므로 -f 옵션 사용
+            # JAR 파일 제거
             rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
+            
             echo ">>> Clean complete"
+            # 스크립트 마지막에 종료 코드 0을 명시적으로 반환
+            exit 0
+            # *주의: 'exit 0'은 SSH 액션의 마지막에 도달해야 합니다.
 
       # 6. 새 jar 전송
       - name: Copy new jar to EC2
