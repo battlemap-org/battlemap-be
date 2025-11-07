@@ -28,12 +28,13 @@ jobs:
       # 4. SSH Key 설정
       - name: Deploy Key Setup
         run: |
+          # EC2_KEY Secret을 Base64 디코딩하여 deploy_key.pem 파일로 생성
           echo "${{ secrets.EC2_KEY }}" | base64 -d > deploy_key.pem
           chmod 600 deploy_key.pem
           eval "$(ssh-agent -s)"
           ssh-add deploy_key.pem
 
-      # 5. EC2에서 기존 프로세스 및 jar 제거
+      # 5. EC2에서 기존 프로세스 및 jar 제거 (pkill -> pgrep/kill로 변경하여 종료 안정성 확보)
       - name: Clean old jar and process
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -42,8 +43,18 @@ jobs:
           key_path: deploy_key.pem
           script: |
             echo ">>> Stopping running app..."
-            pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
-            sleep 3
+            # 실행 중인 프로세스 ID 찾기
+            CURRENT_PID=$(pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar')
+            
+            if [ -z "$CURRENT_PID" ]; then
+              echo ">>> App is not running (PID not found)."
+            else
+              echo ">>> Killing process $CURRENT_PID"
+              # 강제 종료 (kill -9) 후, 종료 코드가 0이 아니어도 파이프라인이 멈추지 않도록 || true 추가
+              kill -9 "$CURRENT_PID" || true
+              sleep 3
+            fi
+            
             echo ">>> Removing old jar..."
             rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
             echo ">>> Clean complete"
@@ -58,7 +69,7 @@ jobs:
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
 
-      # 7. 새 앱 실행 및 포트 확인
+      # 7. 새 앱 실행 및 포트 확인 (Sleep 시간 증가 및 sudo ss 사용)
       - name: Restart app and check port
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -67,6 +78,7 @@ jobs:
           key_path: deploy_key.pem
           script: |
             echo ">>> Starting new app..."
+            # 모든 -D 옵션을 따옴표로 감싸고, 한 줄에 이어서 구문 오류 최소화
             nohup java \
               -Dspring.datasource.url="${{ secrets.DB_URL }}" \
               -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
@@ -76,11 +88,16 @@ jobs:
               -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar \
               > /home/ubuntu/log.out 2>&1 &
 
-            sleep 5
+            # Spring Boot가 충분히 시작할 시간을 줍니다 (최소 15초 권장)
+            sleep 15
+            
             echo ">>> Checking port 8081..."
-            if ss -tulnp | grep 8081; then
+            # sudo를 사용하여 프로세스 이름까지 정확하게 확인
+            if sudo ss -tulnp | grep 8081; then
               echo ">>> ✅ App is running on port 8081"
             else
               echo ">>> ⚠️ App failed to start. Last 50 log lines:"
               tail -n 50 /home/ubuntu/log.out
+              # 실패 시 CI/CD 워크플로우가 멈추도록 exit code를 반환
+              exit 1
             fi
