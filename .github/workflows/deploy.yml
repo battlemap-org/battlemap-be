@@ -25,7 +25,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
-      # 4. SSH Key 생성
+      # 4. SSH Key 설정
       - name: Deploy Key Setup
         run: |
           echo "${{ secrets.EC2_KEY }}" | base64 -d > deploy_key.pem
@@ -33,8 +33,23 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add deploy_key.pem
 
-      # 5. JAR 전송
-      - name: Copy jar to EC2
+      # 5. EC2에서 기존 프로세스 및 jar 제거
+      - name: Clean old jar and process
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key_path: deploy_key.pem
+          script: |
+            echo ">>> Stopping running app..."
+            pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
+            sleep 3
+            echo ">>> Removing old jar..."
+            rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
+            echo ">>> Clean complete"
+
+      # 6. 새 jar 전송
+      - name: Copy new jar to EC2
         uses: appleboy/scp-action@v0.1.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -43,34 +58,29 @@ jobs:
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
 
-      # 6. EC2에서 앱 재시작 + 포트 확인
-      - name: Restart App and Check Port
+      # 7. 새 앱 실행 및 포트 확인
+      - name: Restart app and check port
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key_path: deploy_key.pem
           script: |
-            echo ">>> Stopping old process"
-            pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
-            sleep 3
-
-            echo ">>> Starting new app with proper envs"
+            echo ">>> Starting new app..."
             nohup java \
               -Dspring.datasource.url="${{ secrets.DB_URL }}" \
               -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
               -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
               -DKAKAO_API_KEY="${{ secrets.KAKAO_API_KEY }}" \
+              -Dserver.port=8081 \
               -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar \
               > /home/ubuntu/log.out 2>&1 &
 
-            disown
             sleep 5
-
-            echo ">>> Checking port"
+            echo ">>> Checking port 8081..."
             if ss -tulnp | grep 8081; then
-              echo ">>> Port 8081 is open"
+              echo ">>> ✅ App is running on port 8081"
             else
-              echo ">>> Port not open, showing last log lines"
-              tail -n 30 /home/ubuntu/log.out
+              echo ">>> ⚠️ App failed to start. Last 50 log lines:"
+              tail -n 50 /home/ubuntu/log.out
             fi
