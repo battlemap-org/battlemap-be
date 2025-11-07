@@ -79,7 +79,7 @@ jobs:
           username: ubuntu
           key_path: deploy_key.pem
           script: |
-            JAR_PATH="/home/ubuntu/libs/battlemap-be-0.0.1-SNAPSHOT.jar"
+            JAR_PATH="/home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar"
             
             # --- 1. JAR 파일 존재 여부 확인 및 권한 부여 ---
             if [ ! -f "$JAR_PATH" ]; then
