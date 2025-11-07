@@ -51,36 +51,26 @@ jobs:
           username: ubuntu
           key_path: deploy_key.pem
           script: |
-            # 환경 변수 설정
-            export DB_URL=${{ secrets.DB_URL }}
-            export DB_USERNAME=${{ secrets.DB_USERNAME }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export KAKAO_API_KEY=${{ secrets.KAKAO_API_KEY }}
+            echo ">>> Stopping old process"
+            pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
+            sleep 3
 
-            # 기존 앱 종료
-            if lsof -i :8081; then
-              echo ">>> Killing old process on port 8081"
-              pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
-              sleep 3
-            fi
-
-            # 새 앱 실행
-            echo ">>> Starting new app"
-            nohup java -Dspring.datasource.url=$DB_URL \
-                     -Dspring.datasource.username=$DB_USERNAME \
-                     -Dspring.datasource.password=$DB_PASSWORD \
-                     -DKAKAO_API_KEY=$KAKAO_API_KEY \
-                     -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar \
-                     > /home/ubuntu/log.out 2>&1 &
+            echo ">>> Starting new app with proper envs"
+            nohup java \
+              -Dspring.datasource.url="${{ secrets.DB_URL }}" \
+              -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
+              -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
+              -DKAKAO_API_KEY="${{ secrets.KAKAO_API_KEY }}" \
+              -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar \
+              > /home/ubuntu/log.out 2>&1 &
 
             disown
             sleep 5
 
-            # 포트 상태 확인
-            echo ">>> Checking if port 8081 is listening"
+            echo ">>> Checking port"
             if ss -tulnp | grep 8081; then
-              echo ">>> Port 8081 is open and app is running!"
+              echo ">>> Port 8081 is open"
             else
-              echo ">>> WARNING: Port 8081 is not listening!"
-              tail -n 20 /home/ubuntu/log.out
+              echo ">>> Port not open, showing last log lines"
+              tail -n 30 /home/ubuntu/log.out
             fi
