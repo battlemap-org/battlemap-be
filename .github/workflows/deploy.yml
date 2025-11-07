@@ -103,7 +103,7 @@ jobs:
               > /home/ubuntu/log.out 2>&1 &
 
             # Spring Boot가 충분히 시작할 시간을 줍니다
-            sleep 15
+            sleep 25
             
             # --- 3. 포트 확인 및 디버깅 로그 출력 ---
             echo ">>> Checking port 8081..."
