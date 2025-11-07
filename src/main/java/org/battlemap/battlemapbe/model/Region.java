@@ -1,4 +1,4 @@
-package org.battlemap.battlemapbe.entity;
+package org.battlemap.battlemapbe.model;
 
 
 import jakarta.persistence.*;

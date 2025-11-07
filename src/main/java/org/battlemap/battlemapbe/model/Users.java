@@ -20,36 +20,34 @@ public class Users extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "userId", nullable = false)
-    private Long userId; // DB의 기본키 (자동 증가)
+    private Long userId;
 
     @Column(name = "id", nullable = false, length = 20, unique = true)
     private String id; // 사용자 아이디
 
     @Column(name = "name", nullable = false, length = 20)
-    private String name; // 이름
+    private String name;
 
-    // ✅ 비밀번호 (BCrypt 암호화되어 저장됨)
     @Column(name = "pw", nullable = false, length = 255)
     private String pw;
 
     @Column(name = "email", nullable = false, length = 50, unique = true)
-    private String email; // 이메일
+    private String email;
 
-    // ✅ JWT 토큰 저장용 컬럼 추가
     @Column(name = "token", length = 512)
-    private String token; // 로그인 시 발급된 JWT 저장
+    private String token;
 
-    // ✅ 포인트 필드 (기본값 0)
+    // 포인트 잔액 (충전 가능한 자원)
     @Builder.Default
     @Column(name = "point", nullable = false)
     private int point = 0;
 
-    // ✅ 지역화폐 잔액
+    // 실제 지역화폐 잔액 (충전된 금액)
     @Builder.Default
     @Column(name = "balance", nullable = false)
-    private Long balance = 0L;
+    private int balance = 0;
 
-    // ✅ 매핑 관계들
+    // 연관관계들
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
     private List<UserQuests> userQuestsList = new ArrayList<>();
@@ -60,17 +58,24 @@ public class Users extends BaseEntity {
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<Coupons> CouponsList = new ArrayList<>();
+    private List<Coupons> couponsList = new ArrayList<>();
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserOccupyPoints> UserOccupyPointsList = new ArrayList<>();
+    private List<UserOccupyPoints> userOccupyPointsList = new ArrayList<>();
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserOccupyStatus> UserOccupystatusList = new ArrayList<>();
+    private List<UserOccupyStatus> userOccupyStatusList = new ArrayList<>();
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserCities> UserCitiesList = new ArrayList<>();
+    private List<UserCities> userCitiesList = new ArrayList<>();
+
+    // 포인트 추가 메서드
+    public void addPoint(Integer reward) {
+        if (reward != null && reward > 0) {
+            this.point += reward;
+        }
+    }
 }
