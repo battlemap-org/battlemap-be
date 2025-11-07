@@ -44,8 +44,8 @@ jobs:
           script: |
             echo ">>> Stopping running app..."
             
-            # 프로세스 ID를 찾고, 찾으면 강제 종료를 시도합니다.
-            pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' | xargs -r kill -9 || true
+            # **[핵심 수정]** kill 명령을 서브 셸에서 실행하여 메인 스크립트의 종료 코드를 오염시키지 않도록 합니다.
+            (pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' | xargs -r kill -9) || true
             sleep 3
             
             echo ">>> Removing old jar..."
@@ -55,7 +55,6 @@ jobs:
             echo ">>> Clean complete"
             # 스크립트 마지막에 종료 코드 0을 명시적으로 반환
             exit 0
-            # *주의: 'exit 0'은 SSH 액션의 마지막에 도달해야 합니다.
 
       # 6. 새 jar 전송
       - name: Copy new jar to EC2
