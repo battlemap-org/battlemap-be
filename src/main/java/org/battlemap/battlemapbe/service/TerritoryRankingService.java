@@ -1,7 +1,7 @@
-package org.battlemap.battlemapbe.league.service;
+package org.battlemap.battlemapbe.service;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.league.dto.TerritoryTeamRankDto;
+import org.battlemap.battlemapbe.dto.league.TerritoryTeamRankDto;
 import org.battlemap.battlemapbe.repository.TerritoryRankingQueryRepository;
 import org.springframework.stereotype.Service;
 

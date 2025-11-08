@@ -1,7 +1,7 @@
-package org.battlemap.battlemapbe.league.dto;
+package org.battlemap.battlemapbe.dto.league;
 
 import lombok.*;
-import org.battlemap.battlemapbe.league.model.LeagueStatus;
+import org.battlemap.battlemapbe.model.mapping.LeagueStatus;
 
 import java.time.LocalDateTime;
 

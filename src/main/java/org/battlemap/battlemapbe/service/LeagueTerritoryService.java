@@ -1,9 +1,8 @@
-package org.battlemap.battlemapbe.league.service;
+package org.battlemap.battlemapbe.service;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.league.dto.TerritoryDto;
+import org.battlemap.battlemapbe.dto.league.TerritoryDto;
 import org.battlemap.battlemapbe.model.Region;
-import org.battlemap.battlemapbe.service.RegionService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

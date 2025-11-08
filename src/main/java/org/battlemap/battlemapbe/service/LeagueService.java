@@ -1,12 +1,12 @@
-package org.battlemap.battlemapbe.league.service;
+package org.battlemap.battlemapbe.service;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.league.dto.LeagueRequestDto;
-import org.battlemap.battlemapbe.league.dto.LeagueResponseDto;
-import org.battlemap.battlemapbe.league.dto.LeagueRankingRowDto;
-import org.battlemap.battlemapbe.league.dto.LeagueLogItemDto;
-import org.battlemap.battlemapbe.league.dto.LeagueLogResponseDto;
-import org.battlemap.battlemapbe.league.model.LeagueStatus;
+import org.battlemap.battlemapbe.dto.league.LeagueRequestDto;
+import org.battlemap.battlemapbe.dto.league.LeagueResponseDto;
+import org.battlemap.battlemapbe.dto.league.LeagueRankingRowDto;
+import org.battlemap.battlemapbe.dto.league.LeagueLogItemDto;
+import org.battlemap.battlemapbe.dto.league.LeagueLogResponseDto;
+import org.battlemap.battlemapbe.model.mapping.LeagueStatus;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;

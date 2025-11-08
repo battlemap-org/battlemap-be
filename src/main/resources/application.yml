@@ -3,9 +3,9 @@ spring:
     name: battlemap-be
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://127.0.0.1:3306/battlemap?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8
+    username: root
+    password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -21,9 +21,9 @@ spring:
     enabled: false
 
 server:
-  port: 8081
+  port: 8080
   address: 0.0.0.0
 
 kakao:
   api:
-    key: ${KAKAO_API_KEY}
+    key: KakaoAK 3d3afc3209bf25b1df47db8858832841

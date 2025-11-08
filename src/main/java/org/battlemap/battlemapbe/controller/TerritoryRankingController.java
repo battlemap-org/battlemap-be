@@ -1,8 +1,8 @@
 package org.battlemap.battlemapbe.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.league.dto.TerritoryTeamRankDto;
-import org.battlemap.battlemapbe.league.service.TerritoryRankingService;
+import org.battlemap.battlemapbe.dto.league.TerritoryTeamRankDto;
+import org.battlemap.battlemapbe.service.TerritoryRankingService;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 

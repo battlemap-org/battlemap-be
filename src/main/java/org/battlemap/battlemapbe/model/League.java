@@ -1,9 +1,9 @@
 // src/main/java/org/battlemap/battlemapbe/entity/League.java
-package org.battlemap.battlemapbe.entity;
+package org.battlemap.battlemapbe.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.battlemap.battlemapbe.league.model.LeagueStatus;
+import org.battlemap.battlemapbe.model.mapping.LeagueStatus;
 import org.battlemap.battlemapbe.model.global.BaseEntity;
 
 import java.time.LocalDateTime;

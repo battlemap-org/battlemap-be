@@ -1,10 +1,10 @@
 package org.battlemap.battlemapbe.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.league.dto.*;
-import org.battlemap.battlemapbe.league.model.LeagueStatus;
-import org.battlemap.battlemapbe.league.service.LeagueService;
-import org.battlemap.battlemapbe.league.service.LeagueTerritoryService;
+import org.battlemap.battlemapbe.dto.league.*;
+import org.battlemap.battlemapbe.model.mapping.LeagueStatus;
+import org.battlemap.battlemapbe.service.LeagueService;
+import org.battlemap.battlemapbe.service.LeagueTerritoryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

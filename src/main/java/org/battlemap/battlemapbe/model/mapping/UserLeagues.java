@@ -3,7 +3,7 @@ package org.battlemap.battlemapbe.model.mapping;
 import jakarta.persistence.*;
 import lombok.*;
 import org.battlemap.battlemapbe.model.Users;
-import org.battlemap.battlemapbe.entity.League;  // ✅ 올바른 import
+import org.battlemap.battlemapbe.model.League;  // ✅ 올바른 import
 
 @Entity
 @Table(name = "user_leagues") // ✅ 스네이크 케이스로 통일

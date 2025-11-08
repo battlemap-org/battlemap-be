@@ -1,12 +1,12 @@
 package org.battlemap.battlemapbe.repository;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.league.dto.TerritoryTeamRankDto;
+import org.battlemap.battlemapbe.dto.league.TerritoryTeamRankDto;
 import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
-import java.math.BigInteger;
+
 import java.util.ArrayList;
 import java.util.List;
 

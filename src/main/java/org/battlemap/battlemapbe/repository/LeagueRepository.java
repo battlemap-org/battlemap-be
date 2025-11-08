@@ -1,8 +1,8 @@
 // src/main/java/org/battlemap/battlemapbe/repository/LeagueRepository.java
 package org.battlemap.battlemapbe.repository;
 
-import org.battlemap.battlemapbe.entity.League;
-import org.battlemap.battlemapbe.league.model.LeagueStatus;
+import org.battlemap.battlemapbe.model.League;
+import org.battlemap.battlemapbe.model.mapping.LeagueStatus;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 

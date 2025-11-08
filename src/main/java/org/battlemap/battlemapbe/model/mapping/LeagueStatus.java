@@ -1,4 +1,4 @@
-package org.battlemap.battlemapbe.league.model;
+package org.battlemap.battlemapbe.model.mapping;
 
 public enum LeagueStatus {
     SCHEDULED,  // 예정

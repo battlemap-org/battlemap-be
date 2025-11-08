@@ -1,4 +1,4 @@
-package org.battlemap.battlemapbe.league.dto;
+package org.battlemap.battlemapbe.dto.league;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
