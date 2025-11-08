@@ -6,6 +6,7 @@ import org.battlemap.battlemapbe.model.response.ApiResponse;
 import org.battlemap.battlemapbe.service.DongLeaderboardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.battlemap.battlemapbe.service.LeagueService;
 
 @RestController
 @RequestMapping("/api/regions")
@@ -26,5 +27,12 @@ public class LeagueController {
                 dongLeaderboardService.getDongLeaderboard(dongName);
 
         return ResponseEntity.ok(ApiResponse.success(response, 200));
+    }
+    private final LeagueService leagueService;
+
+    // ✅ cityName을 PathVariable로 받는다
+    @GetMapping("/{cityName}/leaderboard")
+    public LeagueService.LeagueResponse getLeaderboardByCity(@PathVariable String cityName) {
+        return leagueService.getMonthlyLeaderboard();
     }
 }
