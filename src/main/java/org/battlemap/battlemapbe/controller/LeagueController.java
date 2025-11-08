@@ -1,12 +1,10 @@
 package org.battlemap.battlemapbe.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.battlemap.battlemapbe.league.dto.LeagueRequestDto;
-import org.battlemap.battlemapbe.league.dto.LeagueResponseDto;
-import org.battlemap.battlemapbe.league.dto.LeagueRankingRowDto;
-import org.battlemap.battlemapbe.league.dto.LeagueLogResponseDto;
+import org.battlemap.battlemapbe.league.dto.*;
 import org.battlemap.battlemapbe.league.model.LeagueStatus;
 import org.battlemap.battlemapbe.league.service.LeagueService;
+import org.battlemap.battlemapbe.league.service.LeagueTerritoryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +16,7 @@ import java.util.List;
 public class LeagueController {
 
     private final LeagueService leagueService;
+    private final LeagueTerritoryService leagueTerritoryService; // ✅ 추가
 
     /** (1) 리그 목록 조회 (status 필터) */
     @GetMapping
@@ -51,8 +50,9 @@ public class LeagueController {
 
     /** (5) 리그 대상 지역(territories) 조회 */
     @GetMapping("/{leagueId}/territories")
-    public ResponseEntity<List<String>> getTerritories(@PathVariable Long leagueId) {
-        return ResponseEntity.ok(leagueService.getTerritories(leagueId));
+    public ResponseEntity<List<TerritoryDto>> getTerritories(@PathVariable Long leagueId) {
+        // 수정 포인트: DB 연동된 서비스 사용
+        return ResponseEntity.ok(leagueTerritoryService.getTerritories(leagueId));
     }
 
     /** (6) 리그 랭킹 조회 (팀 순위) */

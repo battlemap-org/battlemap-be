@@ -1,4 +1,3 @@
-// src/main/java/org/battlemap/battlemapbe/league/dto/TerritoryDto.java
 package org.battlemap.battlemapbe.league.dto;
 
 import lombok.AllArgsConstructor;
@@ -14,4 +13,6 @@ public class TerritoryDto {
     private String name;
     private String code;
     private Long polygonId;
+    private Double latitude;   // 추가
+    private Double longitude;  // 추가
 }
