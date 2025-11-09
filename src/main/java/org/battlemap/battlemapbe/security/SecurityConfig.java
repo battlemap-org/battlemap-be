@@ -25,12 +25,17 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration corsConfig = new CorsConfiguration();
-                    corsConfig.setAllowedOrigins(List.of("http://3.35.246.97:8081"));
+                    corsConfig.setAllowedOriginPatterns(List.of(
+                            "http://localhost:3000",
+                            "http://3.35.246.97",
+                            "http://3.35.246.97:8081"
+                    ));
                     corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    corsConfig.setAllowedHeaders(List.of("*"));
+                    corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type"));
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))
+
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(login -> login.disable())
