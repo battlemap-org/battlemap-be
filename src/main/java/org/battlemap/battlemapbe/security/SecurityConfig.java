@@ -24,43 +24,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // ✅ CSRF, 세션, 폼 로그인 비활성화
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(login -> login.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // ✅ 접근 권한 설정
+                // ✅ 모든 요청 임시 허용
                 .authorizeHttpRequests(auth -> auth
-                        // 로그인·회원가입은 공개
-                        .requestMatchers("/", "/api/users/register", "/api/users/login").permitAll()
-                        // 그 외 모든 /api 요청은 인증 필요
-                        .requestMatchers("/api/**").authenticated()
-                        // 기타 요청(정적 리소스 등)은 허용
-                        .anyRequest().permitAll()
+                        .requestMatchers("/**").permitAll()
                 );
 
-        // ✅ JWT 필터를 UsernamePasswordAuthenticationFilter 전에 추가
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 
-    // ✅ CORS 설정 세부 정의
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // "*" 대신 명시적인 패턴 사용 (Spring Boot 3.x 권장 방식)
-        configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:5173",        // 로컬 개발용
-                "http://localhost:3000",
-                "https://battlemap.vercel.app"  // 배포용 프론트
-        ));
+        // ✅ 임시 전체 오픈
+        configuration.addAllowedOriginPattern("*");
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true); // Authorization 헤더 등 자격 허용
-        configuration.setMaxAge(3600L); // 프리플라이트 요청 캐시 시간(초 단위)
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
