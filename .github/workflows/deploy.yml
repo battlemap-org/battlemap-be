@@ -43,12 +43,11 @@ jobs:
           key_path: deploy_key.pem
           script: |
             echo ">>> Checking for running app..."
-            # 정확한 프로세스만 잡기 위해 grep 필터 강화
-            RUNNING_PID=$(ps -ef | grep 'battlemap-be-0.0.1-SNAPSHOT.jar' | grep -v grep | grep -v ssh | awk '{print $2}')
+            PIDS=$(ps -ef | grep 'battlemap-be-0.0.1-SNAPSHOT.jar' | grep -v grep | awk '{print $2}')
             
-            if [ -n "$RUNNING_PID" ]; then
-            echo ">>> Found running app with PID $RUNNING_PID. Attempting to stop..."
-            kill "$RUNNING_PID"
+            if [ -n "$PIDS" ]; then
+            echo ">>> Found running app(s): $PIDS"
+            kill -9 $PIDS
             sleep 3
             else
             echo ">>> No running app found."
@@ -58,8 +57,6 @@ jobs:
             rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
             
             echo ">>> Clean complete"
-            exit 0
-
 
 # 6. 새 jar 전송
       - name: Copy new jar to EC2
@@ -79,7 +76,7 @@ jobs:
           username: ubuntu
           key_path: deploy_key.pem
           script: |
-            JAR_PATH="/home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar"
+            JAR_PATH="/home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar"
             
             # --- 1. JAR 파일 존재 여부 확인 및 권한 부여 ---
             if [ ! -f "$JAR_PATH" ]; then
