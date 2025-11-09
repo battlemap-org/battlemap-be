@@ -35,10 +35,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // 홈, 로그인, 회원가입은 토큰 검사 제외
-        if (path.equals("/")
-                || path.equals("/api/users/login")
-                || path.equals("/api/users/register")) {
+        // JWT 검증이 필요한 경로만 필터 적용 (/api/ 로 시작)
+        if (!path.startsWith("/api/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 로그인/회원가입은 제외
+        if (path.equals("/api/users/login") || path.equals("/api/users/register")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -74,8 +78,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"error\": \"유효하지 않은 토큰입니다. 다시 로그인해주세요.\"}");
                 return;
             }
+        } else {
+            // 토큰이 아예 없는 경우 → 401 반환
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"인증 토큰이 필요합니다.\"}");
+            return;
         }
+
         filterChain.doFilter(request, response);
     }
+
 }
 
