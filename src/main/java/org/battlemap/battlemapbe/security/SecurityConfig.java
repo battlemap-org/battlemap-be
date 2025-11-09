@@ -29,9 +29,13 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
                 .formLogin(login -> login.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // ✅ 모든 요청 임시 허용
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll()
+                        // 공개 경로
+                        .requestMatchers("/", "/api/users/register", "/api/users/login").permitAll()
+                        // 나머지 API는 JWT 인증 필요
+                        .requestMatchers("/api/**").authenticated()
+                        // 그 외 다른 요청은 공개
+                        .anyRequest().permitAll()
                 );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -41,7 +45,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // ✅ 임시 전체 오픈
+        // 모든 도메인 허용, 배포 시 필요하면 특정 도메인만 허용 가능
         configuration.addAllowedOriginPattern("*");
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
