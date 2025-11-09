@@ -41,10 +41,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // API 중 인증이 필요 없는 것
                         .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-                        // 프론트엔드 전체 허용
-                        .requestMatchers("/", "/**").permitAll()
                         // API 요청만 JWT 인증 적용
                         .requestMatchers("/api/**").authenticated()
+                        // 프론트엔드 전체 허용
+                        .requestMatchers("/", "/**").permitAll()
                 );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
