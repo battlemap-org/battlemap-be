@@ -5,12 +5,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.List;
 
@@ -24,34 +25,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // CSRF, 기본 로그인, 폼 로그인 비활성화
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(login -> login.disable())
+                // 세션 Stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 경로별 접근 제어
                 .authorizeHttpRequests(auth -> auth
-                        // 1. 모든 정적 리소스 및 루트 경로를 인증 없이 무조건 허용
-                        .requestMatchers("/", "/index.html", "/static/**", "/js/**", "/css/**", "/favicon.ico").permitAll()
-
-                        // 2. 인증 불필요 API
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-
-                        // 3. 인증이 필요한 모든 API 경로 설정
+                        .requestMatchers("/", "/api/users/register", "/api/users/login").permitAll()
                         .requestMatchers("/api/**").authenticated()
-
-                        // 4. 나머지 모든 요청 무조건 허용
                         .anyRequest().permitAll()
                 );
 
+        // JWT 필터 적용
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        // "/" 경로는 Security 필터 무시
+        return (web) -> web.ignoring().requestMatchers("/");
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 모든 오리진 허용으로 변경
         configuration.addAllowedOriginPattern("*");
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
