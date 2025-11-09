@@ -24,29 +24,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // CSRF, 기본 로그인, 폼 로그인 비활성화
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(login -> login.disable())
-                // X-Frame-Options, Cache, XSS 보호 헤더 끄기
-                .headers(headers -> headers
-                        .frameOptions(frame -> frame.disable())
-                        .xssProtection(xss -> xss.disable())
-                        .cacheControl(cache -> cache.disable())
-                )
-                // 세션 Stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // 경로별 접근 제어
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/api/users/register", "/api/users/login").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 );
 
-        // JWT 필터 적용
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // jwt 필터는 /api/** 요청에만 적용
+        http.securityMatcher("/api/**")
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
