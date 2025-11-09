@@ -25,7 +25,17 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
-      # 4. SSH Key 설정
+      # 4. jar 파일 빌드 확인
+      - name: Check JAR existence
+        run: |
+          if [ ! -f build/libs/battlemap-be-0.0.1-SNAPSHOT.jar ]; then
+            echo ">>> ❌ ERROR: JAR file does not exist. Build may have failed."
+            exit 1
+          else
+            echo ">>> JAR file exists."
+          fi
+
+      # 5. SSH Key 설정
       - name: Deploy Key Setup
         run: |
           # EC2_KEY Secret을 Base64 디코딩하여 deploy_key.pem 파일로 생성
@@ -34,7 +44,7 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add deploy_key.pem
 
-      # 5. EC2에서 기존 프로세스 및 jar 제거 (종료 안정성 확보)
+      # 6. EC2에서 기존 프로세스 및 jar 제거 (종료 안정성 확보)
       - name: Clean old jar and process
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -58,7 +68,7 @@ jobs:
             
             echo ">>> Clean complete"
 
-# 6. 새 jar 전송
+      # 7. 새 jar 전송
       - name: Copy new jar to EC2
         uses: appleboy/scp-action@v0.1.3
         with:
@@ -68,7 +78,22 @@ jobs:
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
 
-      # 7. 새 앱 실행 및 포트 확인
+      # 8. (jar) local -> EC2 전송 확인
+      - name: Verify JAR on EC2
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key_path: deploy_key.pem
+          script: |
+            if [ ! -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar ]; then
+              echo ">>> ❌ ERROR: JAR file not found on EC2. SCP failed."
+              exit 1
+            else
+              echo ">>> JAR file successfully uploaded to EC2."
+            fi
+
+      # 9. 새 앱 실행 및 포트 확인
       - name: Restart app and check port
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -100,7 +125,7 @@ jobs:
               > /home/ubuntu/log.out 2>&1 &
 
             # Spring Boot가 충분히 시작할 시간을 줍니다
-            sleep 15
+            sleep 20
             
             # --- 3. 포트 확인 및 디버깅 로그 출력 ---
             echo ">>> Checking port 8081..."
