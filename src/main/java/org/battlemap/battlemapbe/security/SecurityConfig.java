@@ -24,29 +24,32 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // CSRF, 기본 로그인, 폼 로그인 비활성화
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(login -> login.disable())
+                // 세션 Stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 경로별 접근 제어
                 .authorizeHttpRequests(auth -> auth
-                        // 공개 경로
-                        .requestMatchers("/", "/api/users/register", "/api/users/login").permitAll()
-                        // 나머지 API는 JWT 인증 필요
+                        // JWT 인증 필요 경로
                         .requestMatchers("/api/**").authenticated()
-                        // 그 외 다른 요청은 공개
+                        // 그 외 경로는 모두 허용
                         .anyRequest().permitAll()
                 );
 
+        // JWT 필터 적용
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 모든 도메인 허용, 배포 시 필요하면 특정 도메인만 허용 가능
-        configuration.addAllowedOriginPattern("*");
+        configuration.addAllowedOriginPattern("*"); // 배포 시 특정 도메인만 허용 가능
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
