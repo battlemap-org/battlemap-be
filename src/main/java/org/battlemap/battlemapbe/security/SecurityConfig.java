@@ -39,12 +39,12 @@ public class SecurityConfig {
                 .formLogin(login -> login.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 프론트엔드 전체 허용
+                        .requestMatchers("/", "/**").permitAll()
                         // API 중 인증이 필요 없는 것
                         .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                         // API 요청만 JWT 인증 적용
                         .requestMatchers("/api/**").authenticated()
-                        // 프론트엔드 전체 허용
-                        .requestMatchers("/", "/**").permitAll()
                 );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
