@@ -41,20 +41,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors() // 위 CorsConfigurationSource 사용
-            .and()
-            .csrf(csrf -> csrf.disable())
-            .httpBasic(basic -> basic.disable())
-            .formLogin(login -> login.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-                .requestMatchers("/api/**").authenticated()
-                .requestMatchers("/", "/**").permitAll()
-            );
+                .cors()
+                .and()
+                .csrf(csrf -> csrf.disable())
+                .httpBasic(basic -> basic.disable())
+                .formLogin(login -> login.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/api/users/register", "/api/users/login").permitAll() // 인증 없이 허용
+                        .requestMatchers("/api/**").authenticated() // 그 외 api는 인증 필요
+                );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 }
+
