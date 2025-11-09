@@ -30,12 +30,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(login -> login.disable())
+                // X-Frame-Options, Cache, XSS 보호 헤더 끄기
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.disable())
+                        .xssProtection(xss -> xss.disable())
+                        .cacheControl(cache -> cache.disable())
+                )
                 // 세션 Stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // 경로별 접근 제어
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/", "/api/users/register", "/api/users/login").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 );
@@ -49,7 +54,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("*"); // 배포 시 특정 도메인만 허용 가능
+        configuration.addAllowedOriginPattern("*"); // 배포 시 특정 도메인만 허용
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
