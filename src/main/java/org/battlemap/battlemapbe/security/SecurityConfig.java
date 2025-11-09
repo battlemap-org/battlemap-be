@@ -34,9 +34,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // 경로별 접근 제어
                 .authorizeHttpRequests(auth -> auth
-                        // JWT 인증 필요 경로
+                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                        .requestMatchers("/").permitAll()
                         .requestMatchers("/api/**").authenticated()
-                        // 그 외 경로는 모두 허용
                         .anyRequest().permitAll()
                 );
 
