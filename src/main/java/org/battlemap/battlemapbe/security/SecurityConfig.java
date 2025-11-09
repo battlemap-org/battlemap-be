@@ -48,8 +48,8 @@ public class SecurityConfig {
                 .formLogin(login -> login.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/users/register", "/api/users/login").permitAll() // 인증 없이 허용
-                        .requestMatchers("/api/**").authenticated() // 그 외 api는 인증 필요
+                        .requestMatchers("/", "/api/users/register", "/api/users/login").permitAll()
+                        .requestMatchers("/api/**").authenticated()
                 );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -57,4 +57,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-

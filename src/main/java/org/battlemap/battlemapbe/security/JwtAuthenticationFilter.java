@@ -34,7 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
-        if (!path.startsWith("/api/")) {
+
+        // 로그인/회원가입 API는 토큰 체크하지 않음
+        if (path.equals("/api/users/login") || path.equals("/api/users/register") || !path.startsWith("/api/")) {
             filterChain.doFilter(request, response);
             return;
         }
