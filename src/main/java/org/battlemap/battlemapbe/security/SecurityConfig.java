@@ -26,8 +26,8 @@ public class SecurityConfig {
                     CorsConfiguration corsConfig = new CorsConfiguration();
                     corsConfig.setAllowedOriginPatterns(List.of(
                             "http://localhost:3000",      // 로컬 개발용
-                            "http://3.35.246.97",        // 배포 서버
-                            "http://3.35.246.97:8081"    // 필요 시 포트 포함
+                            "http://3.35.246.97",         // 배포 서버
+                            "http://3.35.246.97:8081"     // 필요 시 포트 포함
                     ));
                     corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type"));
@@ -39,12 +39,12 @@ public class SecurityConfig {
                 .formLogin(login -> login.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 1. 정적 리소스 경로 명시
+                        // 1. 정적 리소스 경로 명시 (index, static 등)
                         .requestMatchers("/", "/index.html", "/static/**", "/js/**", "/css/**", "/favicon.ico").permitAll()
                         // 2. 인증 불필요 API
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                         // 3. 인증 필요 API
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/api/**").authenticated()
                         // 4. 모든 나머지 요청을 거부하지 않고 허용
                         .anyRequest().permitAll()
                 );
