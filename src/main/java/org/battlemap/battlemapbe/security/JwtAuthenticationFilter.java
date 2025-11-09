@@ -33,6 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+        if (!path.startsWith("/api/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // 헤더에서 토큰을 추출 (Authorization)
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
 
