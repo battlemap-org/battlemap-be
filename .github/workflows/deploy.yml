@@ -9,36 +9,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ✅ 1. GitHub 저장소 코드 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # ✅ 2. JDK 21 설치
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'temurin'
 
+      # ✅ 3. Gradle 빌드
       - name: Build project
         run: |
           chmod +x gradlew
           ./gradlew clean build -x test
 
+      # ✅ 4. 기존 서버 프로세스 종료 (143 무시)
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
+        continue-on-error: true   # ← 143(SIGTERM) 무시
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
             echo ">>> Stopping old process..."
-            pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || echo "No process to kill"
+            if pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' > /dev/null; then
+              pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar'
+              echo "Old process terminated ✅"
+              sleep 3
+            else
+              echo "No existing process found ✅"
+            fi
 
             echo ">>> Removing old jar..."
             rm -f /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
 
+      # ✅ 5. 새 jar 업로드
       - name: Upload new jar
         uses: appleboy/scp-action@v0.1.4
-        continue-on-error: true
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
@@ -46,6 +57,7 @@ jobs:
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/build/libs/
 
+      # ✅ 6. 새 애플리케이션 실행 및 상태 확인
       - name: Run application on EC2 (with DB)
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -63,11 +75,15 @@ jobs:
               /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar \
               > /home/ubuntu/log.out 2>&1 &
 
+            echo ">>> Waiting for app to start..."
             sleep 7
-            if sudo ss -tulnp | grep 8080; then
-              echo "✅ Application running on port 8080"
+
+            echo ">>> Checking app status..."
+            if sudo ss -tulnp | grep 8080 > /dev/null; then
+              echo "✅ Application is running on port 8080"
             else
               echo "❌ Application failed to start"
+              echo "=== Last 50 lines of log.out ==="
               tail -n 50 /home/ubuntu/log.out
               exit 1
             fi
