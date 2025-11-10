@@ -26,10 +26,10 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # ✅ 4. 기존 서버 프로세스 종료 (143 무시)
-      - name: Deploy to EC2
+      # ✅ 4. 기존 서버 프로세스 종료
+      - name: Stop old process on EC2
         uses: appleboy/ssh-action@v1.0.3
-        continue-on-error: true   # ← 143(SIGTERM) 무시
+        continue-on-error: true
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
@@ -45,9 +45,9 @@ jobs:
             fi
 
             echo ">>> Removing old jar..."
-            rm -f /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
+            rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
 
-      # ✅ 5. 새 jar 업로드
+      # ✅ 5. 새 jar 업로드 (경로 수정됨!)
       - name: Upload new jar
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -55,24 +55,25 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/build/libs/
+          target: /home/ubuntu/
 
-      # ✅ 6. 새 애플리케이션 실행 및 상태 확인
-      - name: Run application on EC2 (with DB)
+      # ✅ 6. 애플리케이션 실행 (EC2 내부 DB 기준)
+      - name: Run application on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
-            echo ">>> Starting app with RDS connection..."
+            echo ">>> Starting app with local MySQL..."
             nohup java -jar \
-              -Dspring.datasource.url="${{ secrets.DB_URL }}" \
-              -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
-              -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
+              -Dspring.datasource.url="jdbc:mysql://127.0.0.1:3306/battlemap?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8mb4" \
+              -Dspring.datasource.username="root" \
+              -Dspring.datasource.password="1234" \
               -Dspring.jpa.hibernate.ddl-auto=update \
               -Dserver.port=8080 \
-              /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar \
+              -Dkakao.api.key="KakaoAK 3d3afc3209bf25b1df47db8858832841" \
+              /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar \
               > /home/ubuntu/log.out 2>&1 &
 
             echo ">>> Waiting for app to start..."
