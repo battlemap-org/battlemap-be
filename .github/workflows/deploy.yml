@@ -26,7 +26,7 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # ✅ 4. EC2의 기존 프로세스 중단 및 오래된 jar 제거
+      # ✅ 4. EC2의 기존 프로세스 종료 및 오래된 jar 제거
       - name: Stop old process on EC2
         uses: appleboy/ssh-action@v1.0.3
         continue-on-error: true
@@ -44,8 +44,9 @@ jobs:
               echo "ℹ️ No running process found"
             fi
 
-            echo ">>> Removing old jar..."
-            rm -f /home/ubuntu/build/libs/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
+            echo ">>> Cleaning up old jar..."
+            rm -f /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
+            rm -f /home/ubuntu/build/libs/log.out
 
       # ✅ 5. 새 jar 업로드
       - name: Upload new jar
@@ -55,9 +56,9 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/build/libs/build/libs/
+          target: /home/ubuntu/build/libs/
 
-      # ✅ 6. EC2에서 애플리케이션 실행
+      # ✅ 6. EC2에서 새 애플리케이션 실행
       - name: Run application on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -67,6 +68,8 @@ jobs:
           script: |
             echo ">>> Starting app with local MySQL..."
 
+            cd /home/ubuntu/build/libs
+
             nohup java -jar \
               -Dspring.datasource.url="jdbc:mysql://127.0.0.1:3306/battlemap?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8" \
               -Dspring.datasource.username="root" \
@@ -74,18 +77,18 @@ jobs:
               -Dspring.jpa.hibernate.ddl-auto=update \
               -Dserver.port=8080 \
               -Dkakao.api.key="KakaoAK 3d3afc3209bf25b1df47db8858832841" \
-              /home/ubuntu/build/libs/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar \
-              > /home/ubuntu/build/libs/build/libs/log.out 2>&1 &
+              battlemap-be-0.0.1-SNAPSHOT.jar \
+              > log.out 2>&1 &
 
             echo ">>> Waiting for app to start..."
-            sleep 7
+            sleep 15
 
             echo ">>> Checking app status..."
-            if sudo ss -tulnp | grep 8080 > /dev/null; then
-              echo "✅ Application is running on port 8080"
+            if pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' > /dev/null; then
+              echo "✅ Application is running (Java process detected)"
             else
               echo "❌ Application failed to start"
               echo "=== Last 50 lines of log.out ==="
-              tail -n 50 /home/ubuntu/build/libs/build/libs/log.out
+              tail -n 50 log.out
               exit 1
             fi
