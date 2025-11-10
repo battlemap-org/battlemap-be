@@ -23,17 +23,17 @@ public class DongLeaderboardService {
     @Transactional(readOnly = true)
     public DongLeaderboardResponse getDongLeaderboard(String loginId, String dongName) {
 
-        // 1. 내 정보
+        // 내 정보
         Users me = userRepository.findByLoginId(loginId)
                 .orElseThrow(() ->
                         new CustomException("USER_NOT_FOUND", "존재하지 않는 사용자입니다.", HttpStatus.NOT_FOUND));
         String myName = me.getName();
 
-        // 2. 해당 동 전체 랭킹 (점수 내림차순)
+        // 해당 동 전체 랭킹 (점수 내림차순)
         List<DongLeaderboardResponse.Player> all =
                 queryRepository.findDongLeaderboardByDongName(dongName);
 
-        // 3. TOP3 + 내 순위 계산
+        // TOP3 + 내 순위 계산
         List<DongLeaderboardResponse.Player> top3 = new ArrayList<>();
         int myRank = 0;
         Long myPoint = 0L;

@@ -25,24 +25,23 @@ public class LeagueService {
     private final UserRepository userRepository;
     private final LeaguesRepository leaguesRepository;
 
-    /**
-     * 🔹 이번 시즌 리더보드 + 남은 시간 + 내 시즌 포인트 표시
-     * - 리그 포인트: UserLeagues.leaguePoint 기준
-     * - 사용 가능 포인트(point)는 여기서 직접 변경 X
-     * - 리그 종료 + 미정산이면: 시즌 정산(포인트 이월) 실행
-     */
+     // 이번 시즌 리더보드 + 남은 시간 + 내 시즌 포인트 표시
+     // - 리그 포인트: UserLeagues.leaguePoint 기준
+     // - 사용 가능 포인트(point)는 여기서 직접 변경 X
+     // - 리그 종료 + 미정산이면: 시즌 정산(포인트 이월) 실행
+
     public LeagueResponse getMonthlyLeaderboard(String loginId, String cityName) {
 
-        // 1. 로그인 유저 검증
+        // 로그인 유저 검증
         Users me = userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("USER_NOT_FOUND"));
 
-        // 2. 현재 진행 중인 리그 조회 (기간 내 && settled = false/true 상관없이)
+        // 현재 진행 중인 리그 조회 (기간 내 && settled = false/true 상관없이)
         LocalDateTime now = LocalDateTime.now();
         Leagues currentLeague = leaguesRepository.findCurrentLeague(now)
                 .orElseThrow(() -> new IllegalArgumentException("LEAGUE_NOT_FOUND"));
 
-        // 3. 현재 리그 기준 리더보드 조회 (leaguePoint DESC)
+        // 현재 리그 기준 리더보드 조회 (leaguePoint DESC)
         List<UserLeagues> userLeagues = userLeaguesRepository
                 .findByLeaguesOrderByLeaguePointDesc(currentLeague);
 
@@ -71,25 +70,22 @@ public class LeagueService {
             rank++;
         }
 
-        // 4. 남은 시즌 시간 (리그 endDate 기준)
+        // 남은 시즌 시간 (리그 endDate 기준)
         String remaining = buildRemainingTime(now, currentLeague.getEndDate());
 
-        // 5. 시즌 종료 후 + 아직 정산 안 했으면 → 정산 수행
+        // 시즌 종료 후 + 아직 정산 안 했으면 → 정산 수행
         if (now.isAfter(currentLeague.getEndDate()) && !currentLeague.isSettled()) {
             applySeasonBonusAndReset(currentLeague, userLeagues);
-            // 정산 이후 다시 내 정보 계산하려면 여기서 myRank/mySeasonPoint를 재계산할 수도 있음
         }
 
         return new LeagueResponse(leaderboard, myRank, myNickname, mySeasonPoint, remaining);
     }
 
-    /**
-     * 🔹 시즌 종료 시:
-     *   - leaguePoint + 순위 보너스를 Users.point(사용 가능 포인트)에 적립
-     *   - UserLeagues.leaguePoint = 0 으로 리셋
-     *   - UserLeagues.userRank 저장
-     *   - Leagues.settled = true (중복 정산 방지)
-     */
+     // 시즌 종료 시:
+     //  - leaguePoint + 순위 보너스를 Users.point(사용 가능 포인트)에 적립
+     //  - UserLeagues.leaguePoint = 0 으로 리셋
+     //  - UserLeagues.userRank 저장
+     //  - Leagues.settled = true (중복 정산 방지)
     private void applySeasonBonusAndReset(Leagues league, List<UserLeagues> userLeaguesSorted) {
 
         int rank = 1;
@@ -109,13 +105,13 @@ public class LeagueService {
             int bonusPoints = (basePoints * bonusRate) / 100;
             int totalToAdd = basePoints + bonusPoints;
 
-            // ✅ 1) 사용 가능 포인트(point)에 적립
+            // 사용 가능 포인트(point)에 적립
             if (totalToAdd > 0) {
                 user.setPoint(user.getPoint() + totalToAdd);
                 userRepository.save(user);
             }
 
-            // ✅ 2) 시즌 기록 저장 + 리그 포인트 초기화
+            // 시즌 기록 저장 + 리그 포인트 초기화
             ul.setUserRank(rank);
             ul.setLeaguePoint(0);
             userLeaguesRepository.save(ul);
@@ -123,14 +119,13 @@ public class LeagueService {
             rank++;
         }
 
-        // ✅ 3) 이 리그는 정산 완료 처리 → 재실행 방지
+        // 이 리그는 정산 완료 처리 → 재실행 방지
         league.setSettled(true);
         leaguesRepository.save(league);
     }
 
-    /**
-     * 남은 시간 문자열 생성 ("X일 Y시간 Z분")
-     */
+    // 남은 시간 문자열 생성 ("X일 Y시간 Z분")
+
     private String buildRemainingTime(LocalDateTime now, LocalDateTime end) {
         if (now.isAfter(end)) {
             return "0일 0시간 0분";
@@ -142,9 +137,8 @@ public class LeagueService {
         return String.format("%d일 %d시간 %d분", days, hours, minutes);
     }
 
-    /**
-     * 🔹 응답 DTO (리더보드 + 내 순위/닉네임 + 남은 시간)
-     */
+    // 응답 DTO (리더보드 + 내 순위/닉네임 + 남은 시간)
+
     public record LeagueResponse(
             List<LeaderboardResponseDto> leaderboard,
             int myRank,

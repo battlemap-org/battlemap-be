@@ -13,10 +13,9 @@ public class DongLeaderboardQueryRepository {
     @PersistenceContext
     private EntityManager em;
 
-    /**
-     * 특정 동(dongName)에서 완료된 퀘스트 기준
-     * 유저별 누적 rewardPoint 합계를 구해 점수 순으로 정렬
-     */
+    // 특정 동(dongName)에서 완료된 퀘스트 기준
+    // 유저별 누적 rewardPoint 합계를 구해 점수 순으로 정렬
+
     public List<DongLeaderboardResponse.Player> findDongLeaderboardByDongName(String dongName) {
 
         String jpql =
