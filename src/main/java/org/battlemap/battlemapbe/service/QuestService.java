@@ -8,6 +8,7 @@ import org.battlemap.battlemapbe.model.Stores;
 import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.model.mapping.TodayQuests;
+import org.battlemap.battlemapbe.model.mapping.UserLeagues;
 import org.battlemap.battlemapbe.model.mapping.UserQuests;
 import org.battlemap.battlemapbe.repository.*;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class QuestService {
     private final TodayQuestRepository todayQuestRepository;
     private final UserRepository userRepository;
     private final UserQuestsRepository userQuestsRepository;
-
+    private final UserLeagueRepository userLeagueRepository;
 
     // 퀘스트 목록 조회
     public List<QuestWithStoreDto> getQuestsByStoreId(String loginId, Long storeId) {
@@ -111,20 +112,15 @@ public class QuestService {
 
         // 정답일 경우 포인트 지급
         if (isCorrect) {
-            user.addPoint(reward);
-            userRepository.save(user);
+            UserLeagues userLeague = userLeagueRepository.findByUsers(user)
+                    .orElseThrow(() -> new CustomException("LEAGUE_NOT_FOUND", "해당 사용자의 리그 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+            int currentPoint = userLeague.getLeaguePoint();
+            userLeague.setLeaguePoint(currentPoint + reward);
+            userLeagueRepository.save(userLeague);
         }
 
         // 응답 DTO 반환
         return QuestAnswerResponseDto.from(isCorrect, reward);
     }
-
-    // 지역별 완료 미션 개수 조회
-    public List<QuestCountByDongDto> getCompletedCountByDong(String loginId) {
-        // 사용자 검증
-        Users user = userRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
-        return userQuestsRepository.countCompletedByDong();
-    }
-    
 }
