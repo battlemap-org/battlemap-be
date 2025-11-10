@@ -64,7 +64,7 @@ jobs:
             fi
             
             echo ">>> Removing old jar..."
-            rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
+            rm -f /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
             
             echo ">>> Clean complete"
 
