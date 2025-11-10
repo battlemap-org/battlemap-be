@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ 1. 코드 체크아웃
+      # ✅ 1. 저장소 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -26,7 +26,7 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # ✅ 4. EC2에서 기존 프로세스 종료
+      # ✅ 4. EC2의 기존 프로세스 중단 및 오래된 jar 제거
       - name: Stop old process on EC2
         uses: appleboy/ssh-action@v1.0.3
         continue-on-error: true
@@ -41,11 +41,11 @@ jobs:
               echo "✅ Old process terminated"
               sleep 3
             else
-              echo "ℹ️ No existing process found"
+              echo "ℹ️ No running process found"
             fi
 
             echo ">>> Removing old jar..."
-            rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
+            rm -f /home/ubuntu/build/libs/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
 
       # ✅ 5. 새 jar 업로드
       - name: Upload new jar
@@ -55,9 +55,9 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/
+          target: /home/ubuntu/build/libs/build/libs/
 
-      # ✅ 6. EC2에서 앱 실행
+      # ✅ 6. EC2에서 애플리케이션 실행
       - name: Run application on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -66,6 +66,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             echo ">>> Starting app with local MySQL..."
+
             nohup java -jar \
               -Dspring.datasource.url="jdbc:mysql://127.0.0.1:3306/battlemap?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8" \
               -Dspring.datasource.username="root" \
@@ -73,8 +74,8 @@ jobs:
               -Dspring.jpa.hibernate.ddl-auto=update \
               -Dserver.port=8080 \
               -Dkakao.api.key="KakaoAK 3d3afc3209bf25b1df47db8858832841" \
-              /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar \
-              > /home/ubuntu/log.out 2>&1 &
+              /home/ubuntu/build/libs/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar \
+              > /home/ubuntu/build/libs/build/libs/log.out 2>&1 &
 
             echo ">>> Waiting for app to start..."
             sleep 7
@@ -85,6 +86,6 @@ jobs:
             else
               echo "❌ Application failed to start"
               echo "=== Last 50 lines of log.out ==="
-              tail -n 50 /home/ubuntu/log.out
+              tail -n 50 /home/ubuntu/build/libs/build/libs/log.out
               exit 1
             fi
