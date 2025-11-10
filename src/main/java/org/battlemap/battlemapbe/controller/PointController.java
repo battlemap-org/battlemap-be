@@ -20,7 +20,7 @@ public class PointController {
     private final UserService userService;
     private final PointService pointService;
 
-    // ✅ 기존: 사용자 전체 포인트 조회 (/api/points)
+    // 사용자 전체 포인트 조회 (/api/points)
     @GetMapping("/points")
     public ResponseEntity<ApiResponse<Map<String, Integer>>> getUserPoints(Authentication authentication) {
         String loginId = authentication.getName();
@@ -30,19 +30,15 @@ public class PointController {
         );
     }
 
-    // ✅ 신규: 나의 동별 포인트 & 완료 퀘스트 수 조회 (/api/users/regions/dongs/points)
-    @GetMapping("/users/regions/dongs/points")
-    public ResponseEntity<ApiResponse<List<UserDongPointResponse>>> getMyDongPointsByDong(
-            @RequestParam String cityName,
+    // 나의 동별 포인트 & 완료 퀘스트 수 조회 (/api/users/me/cities/{cityName}/dongs/points-and-quests)
+    @GetMapping("/users/me/cities/{cityName}/dongs/points-and-quests")
+    public ResponseEntity<ApiResponse<List<UserDongPointResponse>>> getMyDongPointsAndQuests(
+            @PathVariable String cityName,
             Authentication authentication
     ) {
         String loginId = authentication.getName();
-
-        List<UserDongPointResponse> result =
-                pointService.getMyDongPoints(loginId, cityName);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(result, 200)
-        );
+        List<UserDongPointResponse> result = pointService.getMyDongPoints(loginId, cityName);
+        return ResponseEntity.ok(ApiResponse.success(result, 200));
     }
+
 }
