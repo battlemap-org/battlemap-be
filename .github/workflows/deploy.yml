@@ -78,7 +78,6 @@ jobs:
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
 
-
         # 8. (jar) local -> EC2 전송 확인
       - name: Verify JAR on EC2
         uses: appleboy/ssh-action@v0.1.7
