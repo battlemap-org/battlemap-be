@@ -1,133 +1,139 @@
 name: CI/CD
 
 on:
-  push:
-    branches:
-      - main
+push:
+branches:
+  - main
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+build-and-deploy:
+runs-on: ubuntu-latest
 
-    steps:
-      # 1. 코드 가져오기
-      - name: Checkout code
-        uses: actions/checkout@v3
+steps:
+  # 1. 코드 가져오기
+  - name: Checkout code
+    uses: actions/checkout@v3
 
-      # 2. JDK 설정 (Java 21)
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: '21'
+  # 2. JDK 설정 (Java 21)
+  - name: Set up JDK
+    uses: actions/setup-java@v3
+    with:
+      distribution: temurin
+      java-version: '21'
 
-      # 3. Gradle 빌드
-      - name: Build with Gradle
-        run: ./gradlew clean build -x test
+  # 3. Gradle 빌드
+  - name: Build with Gradle
+    run: ./gradlew clean build -x test
 
-      # 4. JAR 파일 빌드 확인
-      - name: Check JAR existence
-        run: |
-          if [ ! -f build/libs/battlemap-be-0.0.1-SNAPSHOT.jar ]; then
-            echo ">>> ❌ ERROR: JAR file does not exist. Build may have failed."
-            exit 1
-          else
-            echo ">>> JAR file exists."
-          fi
+  # 4. JAR 파일 빌드 확인
+  - name: Check JAR existence
+    run: |
+      if [ ! -f build/libs/battlemap-be-0.0.1-SNAPSHOT.jar ]; then
+        echo ">>> ❌ ERROR: JAR file does not exist. Build may have failed."
+        exit 1
+      else
+        echo ">>> JAR file exists."
+      fi
 
-      # 5. SSH Key 설정
-      - name: Deploy Key Setup
-        run: |
-          echo "${{ secrets.EC2_KEY }}" | base64 -d > deploy_key.pem
-          chmod 600 deploy_key.pem
-          eval "$(ssh-agent -s)"
-          ssh-add deploy_key.pem
+  # 5. SSH Key 설정
+  - name: Deploy Key Setup
+    run: |
+      echo "${{ secrets.EC2_KEY }}" | base64 -d > deploy_key.pem
+      chmod 600 deploy_key.pem
+      eval "$(ssh-agent -s)"
+      ssh-add deploy_key.pem
 
-      # 6. EC2에서 기존 프로세스 종료 및 잘못된 JAR 제거
-      - name: Clean old jar and process
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key_path: deploy_key.pem
-          script: |
-            echo ">>> Checking for running app..."
-            PIDS=$(ps -ef | grep 'battlemap-be-0.0.1-SNAPSHOT.jar' | grep -v grep | awk '{print $2}')
-            
-            if [ -n "$PIDS" ]; then
-              echo ">>> Found running app(s): $PIDS"
-              kill -9 $PIDS
-              sleep 3
-            else
-              echo ">>> No running app found."
-            fi
+  # 6. EC2에서 기존 프로세스 종료 및 잘못된 JAR 제거
+  - name: Clean old jar and process
+    uses: appleboy/ssh-action@v0.1.7
+    with:
+      host: ${{ secrets.EC2_HOST }}
+      username: ubuntu
+      key_path: deploy_key.pem
+      script: |
+        TARGET_DIR="/home/ubuntu/build/libs"
+        
+        # 💡 [핵심 수정] SCP가 파일을 복사할 디렉토리를 미리 생성 (-p 옵션으로 이미 존재해도 오류 없음)
+        mkdir -p "$TARGET_DIR"
+        echo ">>> Target directory $TARGET_DIR ensured."
+        
+        echo ">>> Checking for running app..."
+        PIDS=$(ps -ef | grep 'battlemap-be-0.0.1-SNAPSHOT.jar' | grep -v grep | awk '{print $2}')
+        
+        if [ -n "$PIDS" ]; then
+          echo ">>> Found running app(s): $PIDS"
+          kill -9 $PIDS
+          sleep 3
+        else
+          echo ">>> No running app found."
+        fi
 
-            # 기존 JAR 파일/디렉터리 제거
-            if [ -e /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar ]; then
-              rm -rf /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-              echo ">>> Old jar/directory removed."
-            fi
+        # 기존 JAR 파일 제거
+        if [ -e "$TARGET_DIR/battlemap-be-0.0.1-SNAPSHOT.jar" ]; then
+          rm -f "$TARGET_DIR/battlemap-be-0.0.1-SNAPSHOT.jar"
+          echo ">>> Old jar removed."
+        fi
 
-      # 7. 새 JAR 전송
-      - name: Copy new jar to EC2
-        uses: appleboy/scp-action@v0.1.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key_path: deploy_key.pem
-          source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
+  # 7. 새 JAR 전송
+  - name: Copy new jar to EC2
+    uses: appleboy/scp-action@v0.1.3
+    with:
+      host: ${{ secrets.EC2_HOST }}
+      username: ubuntu
+      key_path: deploy_key.pem
+      source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
+      target: /home/ubuntu/build/libs/
 
-      # 8. JAR 전송 확인
-      - name: Verify JAR on EC2
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key_path: deploy_key.pem
-          script: |
-            JAR_PATH="/home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar"
-            if [ ! -f "$JAR_PATH" ]; then
-              echo ">>> ❌ ERROR: JAR file not found on EC2. SCP failed."
-              exit 1
-            else
-              echo ">>> JAR file successfully uploaded to EC2."
-            fi
+  # 8. JAR 전송 확인
+  - name: Verify JAR on EC2
+    uses: appleboy/ssh-action@v0.1.7
+    with:
+      host: ${{ secrets.EC2_HOST }}
+      username: ubuntu
+      key_path: deploy_key.pem
+      script: |
+        JAR_PATH="/home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar"
+        if [ ! -f "$JAR_PATH" ]; then
+          echo ">>> ❌ ERROR: JAR file not found on EC2. SCP failed."
+          exit 1
+        else
+          echo ">>> JAR file successfully uploaded to EC2."
+        fi
 
-      # 9. 새 앱 실행 및 포트 확인
-      - name: Restart app and check port
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key_path: deploy_key.pem
-          script: |
-            JAR_PATH="/home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar"
+  # 9. 새 앱 실행 및 포트 확인
+  - name: Restart app and check port
+    uses: appleboy/ssh-action@v0.1.7
+    with:
+      host: ${{ secrets.EC2_HOST }}
+      username: ubuntu
+      key_path: deploy_key.pem
+      script: |
+        JAR_PATH="/home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar"
 
-            # JAR 파일 권한 부여
-            chmod +x "$JAR_PATH"
-            echo ">>> JAR file verified and permissions set."
-            
-            # 앱 실행
-            echo ">>> Starting new app..."
-            nohup java \
-              -Dspring.datasource.url="${{ secrets.DB_URL }}" \
-              -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
-              -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
-              -DKAKAO_API_KEY="${{ secrets.KAKAO_API_KEY }}" \
-              -Dserver.port=8081 \
-              -jar "$JAR_PATH" \
-              > /home/ubuntu/log.out 2>&1 &
+        # JAR 파일 권한 부여
+        chmod +x "$JAR_PATH"
+        echo ">>> JAR file verified and permissions set."
+        
+        # 앱 실행
+        echo ">>> Starting new app..."
+        nohup java \
+          -Dspring.datasource.url="${{ secrets.DB_URL }}" \
+          -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
+          -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
+          -DKAKAO_API_KEY="${{ secrets.KAKAO_API_KEY }}" \
+          -Dserver.port=8081 \
+          -jar "$JAR_PATH" \
+          > /home/ubuntu/log.out 2>&1 &
 
-            # Spring Boot 충분히 시작 대기
-            sleep 20
-            
-            # 포트 확인
-            echo ">>> Checking port 8081..."
-            if sudo ss -tulnp | grep 8081; then
-              echo ">>> ✅ App is running on port 8081"
-            else
-              echo ">>> ⚠️ App failed to start. Last 50 log lines:"
-              tail -n 50 /home/ubuntu/log.out
-              exit 1
-            fi
+        # Spring Boot 충분히 시작 대기
+        sleep 20
+        
+        # 포트 확인
+        echo ">>> Checking port 8081..."
+        if sudo ss -tulnp | grep 8081; then
+          echo ">>> ✅ App is running on port 8081"
+        else
+          echo ">>> ⚠️ App failed to start. Last 50 log lines:"
+          tail -n 50 /home/ubuntu/log.out
+          exit 1
+        fi
