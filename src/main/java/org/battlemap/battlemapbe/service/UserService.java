@@ -60,7 +60,7 @@ public class UserService {
         return token;
     }
 
-    // 포인트 조회
+    // 보유 포인트 조회
     public int getUserPoints(String loginId) {
         Users user = userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "존재하지 않는 사용자입니다.", HttpStatus.NOT_FOUND));

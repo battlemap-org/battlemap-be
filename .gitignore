@@ -38,4 +38,4 @@ out/
 
 # Spring Boot secret configuration
 src/main/resources/application.properties
-
+src/main/resources/application.yml
