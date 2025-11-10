@@ -26,7 +26,7 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 3.35.246.97
+          host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
@@ -39,7 +39,7 @@ jobs:
       - name: Upload new jar
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: 3.35.246.97
+          host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
@@ -48,7 +48,7 @@ jobs:
       - name: Run application on EC2 (with DB)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 3.35.246.97
+          host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
@@ -58,13 +58,13 @@ jobs:
               -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
               -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
               -Dspring.jpa.hibernate.ddl-auto=update \
-              -Dserver.port=8081 \
+              -Dserver.port=8080 \
               /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar \
               > /home/ubuntu/log.out 2>&1 &
 
             sleep 7
-            if sudo ss -tulnp | grep 8081; then
-              echo "✅ Application running on port 8081"
+            if sudo ss -tulnp | grep 8080; then
+              echo "✅ Application running on port 8080"
             else
               echo "❌ Application failed to start"
               tail -n 50 /home/ubuntu/log.out
