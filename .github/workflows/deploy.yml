@@ -38,6 +38,7 @@ jobs:
 
       - name: Upload new jar
         uses: appleboy/scp-action@v0.1.4
+        continue-on-error: true
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
