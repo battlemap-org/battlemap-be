@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.dto.league.DongLeaderboardResponse;
 import org.battlemap.battlemapbe.model.response.ApiResponse;
 import org.battlemap.battlemapbe.service.DongLeaderboardService;
+import org.battlemap.battlemapbe.service.LeagueService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.battlemap.battlemapbe.service.LeagueService;
 
 @RestController
 @RequestMapping("/api/regions")
@@ -18,7 +18,7 @@ public class LeagueController {
     private final LeagueService leagueService;
 
     /**
-     * 특정 동 점령 현황
+     * 🔹 특정 동 리더보드 조회
      * 예시: GET /api/regions/부천시/dongs/역곡동/leaderboard
      */
     @GetMapping("/{cityName}/dongs/{dongName}/leaderboard")
@@ -27,7 +27,7 @@ public class LeagueController {
             @PathVariable String cityName,
             @PathVariable String dongName
     ) {
-        // 인증 확인
+        // ✅ 인증 확인
         if (authentication == null || authentication.getName() == null) {
             return ResponseEntity.status(401)
                     .body(ApiResponse.error("UNAUTHORIZED", "인증되지 않은 사용자입니다.", 401));
@@ -37,9 +37,27 @@ public class LeagueController {
         return ResponseEntity.ok(ApiResponse.success(response, 200));
     }
 
-    // ✅ cityName을 PathVariable로 받는다
+    /**
+     * 🔹 시(市) 단위 리그 리더보드 조회 (시즌 포인트 포함)
+     * 예시: GET /api/regions/부천시/leaderboard
+     */
     @GetMapping("/{cityName}/leaderboard")
-    public LeagueService.LeagueResponse getLeaderboardByCity(@PathVariable String cityName) {
-        return leagueService.getMonthlyLeaderboard();
+    public ResponseEntity<ApiResponse<LeagueService.LeagueResponse>> getLeaderboardByCity(
+            Authentication authentication,
+            @PathVariable String cityName
+    ) {
+        // ✅ 인증 확인
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401)
+                    .body(ApiResponse.error("UNAUTHORIZED", "인증되지 않은 사용자입니다.", 401));
+        }
+
+        // ⚙️ JWT subject → loginId (문자형 로그인 아이디)
+        String loginId = authentication.getName();
+
+        // ✅ loginId와 cityName을 서비스로 전달
+        LeagueService.LeagueResponse response = leagueService.getMonthlyLeaderboard(loginId, cityName);
+
+        return ResponseEntity.ok(ApiResponse.success(response, 200));
     }
 }
