@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ 1. GitHub 저장소 코드 체크아웃
+      # ✅ 1. 코드 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -26,7 +26,7 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # ✅ 4. 기존 서버 프로세스 종료
+      # ✅ 4. EC2에서 기존 프로세스 종료
       - name: Stop old process on EC2
         uses: appleboy/ssh-action@v1.0.3
         continue-on-error: true
@@ -38,16 +38,16 @@ jobs:
             echo ">>> Stopping old process..."
             if pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' > /dev/null; then
               pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar'
-              echo "Old process terminated ✅"
+              echo "✅ Old process terminated"
               sleep 3
             else
-              echo "No existing process found ✅"
+              echo "ℹ️ No existing process found"
             fi
 
             echo ">>> Removing old jar..."
             rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
 
-      # ✅ 5. 새 jar 업로드 (경로 수정됨!)
+      # ✅ 5. 새 jar 업로드
       - name: Upload new jar
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -57,7 +57,7 @@ jobs:
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
           target: /home/ubuntu/
 
-      # ✅ 6. 애플리케이션 실행 (EC2 내부 DB 기준)
+      # ✅ 6. EC2에서 앱 실행
       - name: Run application on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -67,7 +67,7 @@ jobs:
           script: |
             echo ">>> Starting app with local MySQL..."
             nohup java -jar \
-              -Dspring.datasource.url="jdbc:mysql://127.0.0.1:3306/battlemap?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8mb4" \
+              -Dspring.datasource.url="jdbc:mysql://127.0.0.1:3306/battlemap?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8" \
               -Dspring.datasource.username="root" \
               -Dspring.datasource.password="1234" \
               -Dspring.jpa.hibernate.ddl-auto=update \
