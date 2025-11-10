@@ -7,7 +7,7 @@ import org.battlemap.battlemapbe.model.Leagues;
 import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.model.mapping.UserLeagues;
 import org.battlemap.battlemapbe.repository.LeaguesRepository;
-import org.battlemap.battlemapbe.repository.UserLeaguesRepository;
+import org.battlemap.battlemapbe.repository.UserLeagueRepository;
 import org.battlemap.battlemapbe.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +21,7 @@ import java.util.List;
 @Transactional
 public class LeagueService {
 
-    private final UserLeaguesRepository userLeaguesRepository;
+    private final UserLeagueRepository userLeagueRepository;
     private final UserRepository userRepository;
     private final LeaguesRepository leaguesRepository;
 
@@ -42,7 +42,7 @@ public class LeagueService {
                 .orElseThrow(() -> new IllegalArgumentException("LEAGUE_NOT_FOUND"));
 
         // 현재 리그 기준 리더보드 조회 (leaguePoint DESC)
-        List<UserLeagues> userLeagues = userLeaguesRepository
+        List<UserLeagues> userLeagues = userLeagueRepository
                 .findByLeaguesOrderByLeaguePointDesc(currentLeague);
 
         List<LeaderboardResponseDto> leaderboard = new ArrayList<>();
@@ -114,7 +114,7 @@ public class LeagueService {
             // 시즌 기록 저장 + 리그 포인트 초기화
             ul.setUserRank(rank);
             ul.setLeaguePoint(0);
-            userLeaguesRepository.save(ul);
+            userLeagueRepository.save(ul);
 
             rank++;
         }
