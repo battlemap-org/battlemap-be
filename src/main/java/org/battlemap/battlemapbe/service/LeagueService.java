@@ -1,8 +1,10 @@
 package org.battlemap.battlemapbe.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.dto.league.LeaderboardResponseDto;
 import org.battlemap.battlemapbe.model.Users;
+import org.battlemap.battlemapbe.model.mapping.UserLeagues;
 import org.battlemap.battlemapbe.repository.UserLeaguesRepository;
 import org.battlemap.battlemapbe.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,7 @@ public class LeagueService {
 
     /**
      * 🔹 이번 시즌 리더보드 + 남은 시간 + 내 시즌 포인트 표시
-     * 시즌 종료 시 — 상위권에 보너스 포인트 자동 반영
+     * 시즌 종료 시 — 전체 이월 + 상위권 보너스 반영
      */
     public LeagueResponse getMonthlyLeaderboard(String loginId, String cityName) {
 
@@ -49,7 +51,6 @@ public class LeagueService {
                     .totalPoints(totalPoints)
                     .build());
 
-            // ✅ 내 닉네임과 일치하면 순위/포인트 저장
             if (nickname.equals(myNickname)) {
                 myRank = rank;
                 mySeasonPoint = totalPoints;
@@ -70,19 +71,18 @@ public class LeagueService {
                 duration.toMinutes() % 60
         );
 
-        // ✅ 시즌 종료 시 보너스 포인트 반영 (DB만 수정, 반환엔 포함 안 함)
+        // ✅ 시즌 종료 시 전체 이월 및 보너스 반영
         if (now.getDayOfMonth() == endOfMonth.getDayOfMonth()) {
             applySeasonBonus(leaderboard);
         }
 
-        // ✅ 리턴: 내 순위, 닉네임 포함
         return new LeagueResponse(leaderboard, myRank, myNickname, mySeasonPoint, remaining);
     }
 
     /**
-     * 🔹 리그 순위 기반 보너스 지급
-     * 1위: +50%, 2~3위: +30%, 4~5위: +10%, 그 외: 0%
+     * 🔹 시즌 종료 시: 유저리그의 leaguePoint 갱신 + 상위권 보너스 반영 + 리셋
      */
+    @Transactional
     private void applySeasonBonus(List<LeaderboardResponseDto> leaderboard) {
         for (LeaderboardResponseDto dto : leaderboard) {
             int bonusRate = switch (dto.getRank()) {
@@ -92,14 +92,19 @@ public class LeagueService {
                 default -> 0;
             };
 
-            if (bonusRate == 0) continue;
-
-            int bonusPoints = (dto.getTotalPoints() * bonusRate) / 100;
-
-            // ✅ 닉네임으로 사용자 찾아 포인트(balance)에 반영
             userRepository.findByName(dto.getNickname()).ifPresent(u -> {
-                u.setBalance(u.getBalance() + bonusPoints);
-                userRepository.save(u);
+                // 🔹 유저의 현재 리그 포인트 가져오기
+                UserLeagues userLeague = userLeaguesRepository
+                        .findByUsers_UserId(u.getUserId())
+                        .orElseThrow(() -> new IllegalArgumentException("USER_LEAGUE_NOT_FOUND"));
+
+                int basePoints = dto.getTotalPoints();
+                int bonusPoints = (basePoints * bonusRate) / 100;
+                int totalToAdd = basePoints + bonusPoints;
+
+                // ✅ 유저리그 포인트 업데이트
+                userLeague.setLeaguePoint(totalToAdd);
+                userLeaguesRepository.save(userLeague);
             });
         }
     }
