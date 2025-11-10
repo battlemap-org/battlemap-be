@@ -12,10 +12,9 @@ public class UserCategoryRepository {
     @PersistenceContext
     private EntityManager em;
 
-    /**
-     * ✅ MySQL용: 유저별 가장 많이 퀘스트 완료한 카테고리 조회
-     * - user_quests → quests → stores → categories 조인 기반
-     */
+    // MySQL용: 유저별 가장 많이 퀘스트 완료한 카테고리 조회
+    // user_quests → quests → stores → categories 조인 기반
+
     public Optional<Object[]> findTopCategoryByUser(Long userId) {
         Object[] result = (Object[]) em.createNativeQuery("""
             SELECT c.category_name AS category, COUNT(*) AS cnt

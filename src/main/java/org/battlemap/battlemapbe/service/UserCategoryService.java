@@ -14,9 +14,7 @@ public class UserCategoryService {
     private final UserRepository userRepository;
     private final UserCategoryRepository userCategoryRepository;
 
-    /**
-     * ✅ 유저별 가장 많이 퀘스트 완료한 카테고리 조회
-     */
+    // 유저별 가장 많이 퀘스트 완료한 카테고리 조회
     @Transactional(readOnly = true)
     public String findMostActiveCategory(String loginId) {
         Users user = userRepository.findByLoginId(loginId)

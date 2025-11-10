@@ -14,9 +14,7 @@ public class UserCategoryController {
 
     private final UserCategoryService userCategoryService;
 
-    /**
-     * ✅ JWT 인증 기반 유저별 가장 많이 퀘스트 수행한 카테고리 조회
-     */
+    // JWT 인증 기반 유저별 가장 많이 퀘스트 수행한 카테고리 조회
     @GetMapping("/top")
     public ResponseEntity<ApiResponse<String>> getTopCategory(Authentication authentication) {
         String loginId = authentication.getName();
