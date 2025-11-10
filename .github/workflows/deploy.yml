@@ -29,7 +29,6 @@ jobs:
           host: 3.35.246.97
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
-          envs: RDS_URL,RDS_USERNAME,RDS_PASSWORD
           script: |
             echo ">>> Stopping old process..."
             pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
@@ -52,11 +51,10 @@ jobs:
           host: 3.35.246.97
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
-          envs: RDS_URL,RDS_USERNAME,RDS_PASSWORD
           script: |
             echo ">>> Starting app with RDS connection..."
             nohup java -jar \
-              -Dspring.datasource.url="${{ secres.DB_URL }}" \
+              -Dspring.datasource.url="${{ secrets.DB_URL }}" \
               -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
               -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
               -Dspring.jpa.hibernate.ddl-auto=update \
