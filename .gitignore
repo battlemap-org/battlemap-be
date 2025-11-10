@@ -36,6 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
-# Spring Boot configuration (ignore local configs)
-src/main/resources/application.yml
+# Spring Boot secret configuration
 src/main/resources/application.properties
+src/main/resources/application.yml
