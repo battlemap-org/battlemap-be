@@ -76,9 +76,10 @@ jobs:
           username: ubuntu
           key_path: deploy_key.pem
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/build/libs
+          target: /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
 
-      # 8. (jar) local -> EC2 전송 확인
+
+        # 8. (jar) local -> EC2 전송 확인
       - name: Verify JAR on EC2
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -86,14 +87,15 @@ jobs:
           username: ubuntu
           key_path: deploy_key.pem
           script: |
-            if [ ! -f /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar ]; then
+            JAR_PATH="/home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar"
+            if [ ! -f "$JAR_PATH" ]; then
               echo ">>> ❌ ERROR: JAR file not found on EC2. SCP failed."
               exit 1
             else
               echo ">>> JAR file successfully uploaded to EC2."
             fi
 
-      # 9. 새 앱 실행 및 포트 확인
+        # 9. 새 앱 실행 및 포트 확인
       - name: Restart app and check port
         uses: appleboy/ssh-action@v0.1.7
         with:
