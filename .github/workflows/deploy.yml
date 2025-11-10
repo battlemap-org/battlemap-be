@@ -51,22 +51,18 @@ jobs:
           username: ubuntu
           key_path: deploy_key.pem
           script: |
-            echo ">>> Checking for running app..."
-            PIDS=$(ps -ef | grep 'battlemap-be-0.0.1-SNAPSHOT.jar' | grep -v grep | awk '{print $2}')
-            
-            if [ -n "$PIDS" ]; then
-              echo ">>> Found running app(s): $PIDS"
-              kill -9 $PIDS
+            APP_DIR=/home/ubuntu
+            SERVICE_FILE=/etc/systemd/system/battlemap-app.service
+
+            echo ">>> Stopping existing systemd service if exists..."
+            if systemctl is-active --quiet battlemap-app; then
+              sudo systemctl stop battlemap-app
               sleep 3
-            else
-              echo ">>> No running app found."
             fi
 
-            # JAR 파일 제거 (홈 디렉토리)
-            if [ -f "/home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar" ]; then
-              rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
-              echo ">>> Old jar removed."
-            fi
+            echo ">>> Removing old jar and logs..."
+            sudo rm -f $APP_DIR/battlemap-be-0.0.1-SNAPSHOT.jar
+            sudo rm -rf $APP_DIR/log.out
 
       # 7. 새 JAR 전송
       - name: Copy new jar to EC2
@@ -94,36 +90,70 @@ jobs:
               echo ">>> JAR file successfully uploaded to EC2."
             fi
 
-      # 9. 앱 실행
-      - name: Restart app and check port
+      # 9. systemd 서비스 생성 및 실행
+      - name: Configure and start systemd service
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key_path: deploy_key.pem
           script: |
-            JAR_PATH="/home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar"
-            
-            chmod +x "$JAR_PATH"
-            echo ">>> JAR file verified and permissions set."
-            
-            echo ">>> Starting new app..."
-            nohup java \
-              -Dspring.datasource.url="${{ secrets.DB_URL }}" \
-              -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
-              -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
-              -DKAKAO_API_KEY="${{ secrets.KAKAO_API_KEY }}" \
-              -Dserver.port=8081 \
-              -jar "$JAR_PATH" \
-              > /home/ubuntu/log.out 2>&1 &
-            
-            sleep 20
-            
+            APP_DIR=/home/ubuntu
+            JAR_FILE=battlemap-be-0.0.1-SNAPSHOT.jar
+            SERVICE_FILE=/etc/systemd/system/battlemap-app.service
+
+            echo ">>> Creating/updating systemd service..."
+            echo "[Unit]
+            Description=Battlemap Spring Boot Application
+            After=network.target
+
+            [Service]
+            User=ubuntu
+            WorkingDirectory=$APP_DIR
+            ExecStart=/usr/bin/java -Xms512m -Xmx1024m \
+            -Dspring.datasource.url='${{ secrets.DB_URL }}' \
+            -Dspring.datasource.username='${{ secrets.DB_USERNAME }}' \
+            -Dspring.datasource.password='${{ secrets.DB_PASSWORD }}' \
+            -DKAKAO_API_KEY='${{ secrets.KAKAO_API_KEY }}' \
+            -Dserver.port=8081 \
+            -Dspring.datasource.hikari.maximum-pool-size=10 \
+            -jar $APP_DIR/$JAR_FILE \
+            > $APP_DIR/log.out 2>&1
+            Restart=always
+            TimeoutStartSec=120
+
+            [Install]
+            WantedBy=multi-user.target" | sudo tee $SERVICE_FILE
+
+            echo ">>> Reloading systemd daemon..."
+            sudo systemctl daemon-reload
+            sudo systemctl enable battlemap-app
+            sudo systemctl restart battlemap-app
+
+            echo ">>> Waiting for service to start..."
+            for i in {1..12}; do
+              if systemctl is-active --quiet battlemap-app; then
+                echo ">>> ✅ Service is running."
+                break
+              else
+                echo ">>> Waiting..."
+                sleep 5
+              fi
+            done
+
             echo ">>> Checking port 8081..."
             if sudo ss -tulnp | grep 8081; then
-              echo ">>> ✅ App is running on port 8081"
+              echo ">>> ✅ App is listening on port 8081"
             else
               echo ">>> ⚠️ App failed to start. Last 50 log lines:"
-              tail -n 50 /home/ubuntu/log.out
+              tail -n 50 $APP_DIR/log.out
               exit 1
+            fi
+
+            echo ">>> Checking logs for errors..."
+            if grep -i "error\|exception" $APP_DIR/log.out; then
+              echo ">>> ❌ Errors detected in logs!"
+              exit 1
+            else
+              echo ">>> ✅ No critical errors in logs."
             fi
