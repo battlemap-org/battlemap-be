@@ -13,6 +13,9 @@ import java.util.Optional;
 public interface UserQuestsRepository extends JpaRepository<UserQuests, Long> {
     Optional<UserQuests> findByUsersAndQuests(Users users, Quests quests);
 
+    // 사용자 기반 퀘스트 수 조회 (마이페이지)
+    long countByUsers(Users user);
+
     // 지역 별 완료 퀘스트 조회
     @Query("SELECT new org.battlemap.battlemapbe.dto.Quests.QuestCountByDongDto(" +
             "s.dongs.dongId, s.dongs.dongName, COUNT(uq)) " +

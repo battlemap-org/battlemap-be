@@ -2,7 +2,7 @@ package org.battlemap.battlemapbe.service;
 
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.model.Users;
-import org.battlemap.battlemapbe.repository.UserQuestRepository;
+import org.battlemap.battlemapbe.repository.UserQuestsRepository;
 import org.battlemap.battlemapbe.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,15 +14,15 @@ import java.util.Map;
 public class UserQuestService {
 
     private final UserRepository userRepository;
-    private final UserQuestRepository userQuestRepository;
+    private final UserQuestsRepository userQuestsRepository;
 
+    // 사용자 기반 퀘스트 수 조회 (마이페이지)
     @Transactional(readOnly = true)
     public Map<String, Object> getQuestCountByLoginId(String loginId) {
-        // ✅ loginId → DB의 id 컬럼과 매칭됨 (UserRepository 유지)
         Users user = userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND: " + loginId));
 
-        long totalCount = userQuestRepository.countByUsers(user);
+        long totalCount = userQuestsRepository.countByUsers(user);
         return Map.of("totalCount", totalCount);
     }
 }

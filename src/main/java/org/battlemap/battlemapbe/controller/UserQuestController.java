@@ -16,7 +16,7 @@ public class UserQuestController {
 
     private final UserQuestService userQuestService;
 
-    // ✅ 토큰 기반 총 퀘스트 수 조회
+    // 토큰 기반 총 퀘스트 수 조회
     @GetMapping("/count")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getTotalQuestCount(Authentication authentication) {
         String loginId = authentication.getName(); // 토큰에서 loginId 추출
