@@ -31,7 +31,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             echo ">>> Stopping old process..."
-            pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
+            pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || echo "No process to kill"
 
             echo ">>> Removing old jar..."
             rm -f /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
