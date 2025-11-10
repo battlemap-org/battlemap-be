@@ -33,7 +33,13 @@ public class LeagueController {
                     .body(ApiResponse.error("UNAUTHORIZED", "인증되지 않은 사용자입니다.", 401));
         }
 
-        DongLeaderboardResponse response = dongLeaderboardService.getDongLeaderboard(dongName);
+        // ⚙️ JWT subject → loginId
+        String loginId = authentication.getName();
+
+        // ✅ 로그인 유저 포함 동별 리더보드 조회
+        DongLeaderboardResponse response =
+                dongLeaderboardService.getDongLeaderboard(loginId, dongName);
+
         return ResponseEntity.ok(ApiResponse.success(response, 200));
     }
 
