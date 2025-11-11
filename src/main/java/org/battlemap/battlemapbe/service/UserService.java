@@ -62,7 +62,7 @@ public class UserService {
 
         // DTO 객체로 변환하여 반환
         return LoginResponse.builder()
-                .user_id(user.getUserId())
+                .userId(user.getUserId())
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
