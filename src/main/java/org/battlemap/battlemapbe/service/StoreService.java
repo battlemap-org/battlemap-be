@@ -2,7 +2,10 @@ package org.battlemap.battlemapbe.service;
 
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.model.Dongs;
+import org.battlemap.battlemapbe.model.Users;
+import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.repository.DongsRepository;
+import org.battlemap.battlemapbe.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -15,19 +18,22 @@ import java.util.*;
 public class StoreService {
 
     private final DongsRepository dongsRepository;
+    private final UserRepository userRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${kakao.api.key}")
     private String kakaoApiKey;
 
-    /**
-     * 선택한 시/동, 카테고리 기준으로 카카오 API에서 매장 조회
-     *
-     * @param cityName  예: "부천시"
-     * @param regionName 예: "역곡동"
-     * @param category  예: "FD6", "CE7", "AD5", "CULTURE"
-     */
-    public Map<String, Object> getStoresByRegionAndCategory(String cityName, String regionName, String category) {
+    //선택한 시/동, 카테고리 기준으로 카카오 API에서 매장 조회
+    // @param cityName  예: "부천시"
+    //@param regionName 예: "역곡동"
+    //@param category  예: "FD6", "CE7", "AD5", "CULTURE"
+
+    public Map<String, Object> getStoresByRegionAndCategory(String loginId, String cityName, String regionName, String category) {
+        // 사용자 검증
+        Users user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
         String fullName = cityName + " " + regionName;
 
         // Dongs에서 좌표 가져오기 (시+동 기준)
@@ -86,9 +92,7 @@ public class StoreService {
         return result;
     }
 
-    /**
-     * 카카오 카테고리 검색 (category_group_code 사용)
-     */
+    // 카카오 카테고리 검색 (category_group_code 사용)
     private List<Map<String, Object>> fetchStoresByCategory(Dongs dong, String regionName, String categoryCode) {
         double baseLat = safe(dong.getLatitude());
         double baseLng = safe(dong.getLongitude());
@@ -156,9 +160,8 @@ public class StoreService {
         return results;
     }
 
-    /**
-     * 키워드 기반 검색
-     */
+    // 키워드 기반 검색
+
     private List<Map<String, Object>> fetchStoresByKeyword(Dongs dong, String regionName, String keyword) {
         double lat = safe(dong.getLatitude());
         double lng = safe(dong.getLongitude());

@@ -14,7 +14,9 @@ import org.battlemap.battlemapbe.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +30,32 @@ public class QuestService {
     private final UserRepository userRepository;
     private final UserQuestsRepository userQuestsRepository;
     private final UserLeagueRepository userLeagueRepository;
+    private final QuestsRepository questRepository;
+
+    // 퀘스트 템플릿
+    private static final List<String> QUEST_TEMPLATES = List.of(
+            "가게 앞에서 인증샷 찍기(간판이 나오게)",
+            "%s에서 가장 비싼 메뉴는?",
+            "%s에서 가장 싼 메뉴는? (사이드 포함)",
+            "%s의 시그니처 메뉴는?",
+            "%s의 인기 메뉴는?",
+            "%s에는 주차장이 있나요? (예/아니오)",
+            "%s에서 가장 가까운 지하철 역은?"
+    );
+
+    // 퀘스트 정답 템플릿 (임시)
+    private static final List<String> QUEST_ANSWERS = List.of(
+            "인증 필요",
+            "비싼 메뉴",
+            "싼 메뉴",
+            "라떼",
+            "토마토파스타",
+            "예",
+            "홍대입구역"
+    );
+
+    // 퀘스트 리워드 포인트 템플릿
+    private static final List<Integer> REWARD_POINTS = List.of(50, 100, 150, 200);
 
     // 퀘스트 목록 조회
     public List<QuestWithStoreDto> getQuestsByStoreId(String loginId, Long storeId) {
@@ -122,5 +150,70 @@ public class QuestService {
 
         // 응답 DTO 반환
         return QuestAnswerResponseDto.from(isCorrect, reward);
+    }
+
+    // 가게별 퀘스트 생성 (4개)
+    public StoreQuestResponseDto createRandomQuestForStore(String loginId, Long storeId) {
+        // 사용자 검증
+        Users user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "존재하지 않는 사용자입니다.", HttpStatus.NOT_FOUND));
+
+        // 가게 검증
+        Stores store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new CustomException("STORE_NOT_FOUND", "존재하지 않는 가게입니다.", HttpStatus.NOT_FOUND));
+
+        Random random = new Random();
+
+        List<QuestDetailDto> questDetails = new ArrayList<>();
+
+        // 4개의 퀘스트 생성 (i = 0부터 3)
+        for (int i = 0; i < 4; i++) {
+            // ... (랜덤 퀘스트 로직은 동일)
+            int templateIndex = random.nextInt(QUEST_TEMPLATES.size());
+            String template = QUEST_TEMPLATES.get(templateIndex);
+            String questContent;
+
+            if (template.contains("%s")) {
+                questContent = String.format(template, store.getStoreName());
+            } else {
+                questContent = template;
+            }
+
+            String answer = QUEST_ANSWERS.get(templateIndex);
+            Integer rewardPoint = REWARD_POINTS.get(random.nextInt(REWARD_POINTS.size()));
+
+            // Quests 생성 및 저장 (DB ID 할당됨)
+            Quests quest = Quests.builder()
+                    .questNumber(i + 1)
+                    .questContent(questContent)
+                    .answer(answer)
+                    .rewardPoint(rewardPoint)
+                    .stores(store)
+                    .build();
+
+            questRepository.save(quest);
+
+            // 사용자와 퀘스트 연결 (UserQuests 생성)
+            UserQuests userQuest = UserQuests.builder()
+                    .users(user)
+                    .quests(quest)
+                    .isCompleted(false)
+                    .build();
+
+            userQuestsRepository.save(userQuest);
+
+            questDetails.add(QuestDetailDto.builder()
+                    .questId(quest.getQuestId())
+                    .number(quest.getQuestNumber())
+                    .content(questContent)
+                    .score(rewardPoint)
+                    .build());
+        }
+
+        return new StoreQuestResponseDto(
+                store.getStoreName(),
+                questDetails,
+                "4개의 퀘스트가 성공적으로 생성되었습니다!"
+        );
     }
 }
