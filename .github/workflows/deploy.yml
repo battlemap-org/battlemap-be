@@ -26,7 +26,7 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # 4️⃣ EC2에서 기존 프로세스 종료 및 파일 정리
+      # 4️⃣ EC2에서 기존 프로세스 종료 및 이전 파일 정리
       - name: Stop old process on EC2
         uses: appleboy/ssh-action@v1.0.3
         continue-on-error: true
@@ -38,12 +38,12 @@ jobs:
             echo ">>> 🔻 Stopping old process..."
             pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
             sleep 3
-            echo ">>> 🧹 Cleaning old JAR and log..."
-            rm -f /home/ubuntu/app/battlemap-be-0.0.1-SNAPSHOT.jar
-            rm -f /home/ubuntu/app/log.out
+            echo ">>> 🧹 Cleaning old files..."
+            rm -f /home/ubuntu/app/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
+            rm -f /home/ubuntu/app/build/libs/log.out
             echo "✅ Old process stopped and files cleaned."
 
-      # 5️⃣ 새로운 JAR 업로드 (경로를 /home/ubuntu/app 로 통일)
+      # 5️⃣ 새로운 JAR 업로드 (실제 빌드 경로에 맞게)
       - name: Upload new jar to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -51,7 +51,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/app/
+          target: /home/ubuntu/app/build/libs/
 
       # 6️⃣ EC2에서 새 애플리케이션 실행
       - name: Run new application on EC2
@@ -61,7 +61,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
-            APP_DIR=/home/ubuntu/app
+            APP_DIR=/home/ubuntu/app/build/libs
             JAR_FILE=battlemap-be-0.0.1-SNAPSHOT.jar
 
             echo ">>> 🚀 Starting Battlemap server..."
