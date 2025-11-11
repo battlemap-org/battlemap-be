@@ -9,4 +9,7 @@ import java.util.Optional;
 
 public interface UserQuestsRepository extends JpaRepository<UserQuests, Long> {
     Optional<UserQuests> findByUsersAndQuests(Users users, Quests quests);
+
+    // 사용자 기반 퀘스트 수 조회 (마이페이지)
+    long countByUsers(Users user);
 }
