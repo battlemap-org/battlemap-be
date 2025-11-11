@@ -27,8 +27,8 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # 4. EC2 기존 프로세스 종료 및 이전 파일 삭제
-      - name: Stop old process on EC2
+      # 4. EC2 기존 파일, 프로세스 정리
+      - name: Clean old files and processes on EC2
         uses: appleboy/ssh-action@v1.0.3
         continue-on-error: true
         with:
@@ -39,11 +39,10 @@ jobs:
             echo ">>> Stopping old process..."
             pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
             sleep 3
-            echo "✅ Old process terminated if existed"
-
-            echo ">>> Cleaning old jar & log..."
+            echo ">>> Deleting old files..."
             rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
             rm -f /home/ubuntu/log.out
+            echo "✅ Cleanup done"
 
       # 5. 새 jar 업로드
       - name: Upload new jar to EC2
@@ -63,17 +62,22 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
-            echo ">>> Starting battlemap-be..."
-            cd /home/ubuntu
+            echo ">>> Checking if JAR exists..."
+            if [ ! -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar ]; then
+              echo "❌ JAR file not found!"
+              exit 1
+            fi
 
+            echo ">>> Starting battlemap-be..."
             nohup java \
+              -Dserver.address=0.0.0.0 \
+              -Dserver.port=8080 \
               -Dspring.datasource.url=${{ secrets.DB_URL }} \
               -Dspring.datasource.username=${{ secrets.DB_USER_NAME }} \
               -Dspring.datasource.password=${{ secrets.DB_PASSWORD }} \
               -Dspring.jpa.hibernate.ddl-auto=update \
-              -Dserver.port=8080 \
               -Dkakao.api.key=${{ secrets.KAKAO_API_KEY }} \
-              -jar battlemap-be-0.0.1-SNAPSHOT.jar > log.out 2>&1 &
+              -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 &
 
             echo ">>> Waiting for app to start..."
             sleep 15
@@ -83,6 +87,6 @@ jobs:
             else
               echo "❌ Application failed to start"
               echo "=== Last 40 lines of log.out ==="
-              tail -n 40 log.out
+              tail -n 40 /home/ubuntu/log.out
               exit 1
             fi
