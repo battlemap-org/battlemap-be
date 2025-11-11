@@ -64,7 +64,6 @@ public class UserService {
         return LoginResponse.builder()
                 .userId(user.getUserId())
                 .id(user.getId())
-
                 .build();
     }
 
