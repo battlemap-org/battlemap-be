@@ -41,8 +41,8 @@ jobs:
             echo "✅ Old process terminated if existed"
 
             echo ">>> Cleaning old jar & log..."
-            rm -f /home/ubuntu/battlemap-be/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-            rm -f /home/ubuntu/battlemap-be/build/libs/log.out
+            rm -f /home/ubuntu/battlemap-be/build/libs/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
+            rm -f /home/ubuntu/battlemap-be/build/libs/build/libs/log.out
 
       # ✅ 5. 새 jar 업로드
       - name: Upload new jar to EC2
@@ -52,7 +52,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/battlemap-be/build/libs/
+          target: /home/ubuntu/battlemap-be/build/libs/build/libs/
 
       # ✅ 6. EC2 서버에서 새 앱 실행
       - name: Run new application on EC2
@@ -63,7 +63,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             echo ">>> Starting battlemap-be..."
-            cd /home/ubuntu/battlemap-be/build/libs
+            cd /home/ubuntu/battlemap-be/build/libs/build/libs
 
             nohup java -jar \
               -Dspring.datasource.url="jdbc:mysql://127.0.0.1:3306/battlemap?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8" \
@@ -78,7 +78,7 @@ jobs:
             sleep 15
 
             if pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' > /dev/null; then
-              echo "✅ Application is running!"
+              echo "✅ Application is running on EC2!"
             else
               echo "❌ Application failed to start"
               echo "=== Last 40 lines of log.out ==="
