@@ -64,9 +64,11 @@ public class UserService {
         return LoginResponse.builder()
                 .userId(user.getUserId())
                 .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .token(token)
                 .build();
     }
-
     // 보유 포인트 조회
     public int getUserPoints(String loginId) {
         Users user = userRepository.findByLoginId(loginId)
