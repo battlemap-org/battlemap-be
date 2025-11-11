@@ -43,7 +43,7 @@ jobs:
             mkdir -p /home/ubuntu/app
             echo "✅ Clean workspace ready."
 
-      # 5️⃣ 새 JAR 업로드 (경로 중첩 방지)
+      # 5️⃣ 새 JAR 업로드 (⚠️ 슬래시 제거하여 중첩 방지)
       - name: Upload new JAR to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -51,7 +51,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/app/
+          target: /home/ubuntu/app   # ✅ 슬래시 제거: 중첩 build/libs 방지
 
       # 6️⃣ EC2에서 새 애플리케이션 실행
       - name: Run Battlemap on EC2
