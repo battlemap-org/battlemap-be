@@ -5,6 +5,7 @@ import jakarta.persistence.PersistenceContext;
 import org.battlemap.battlemapbe.dto.league.DongLeaderboardResponse;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -13,14 +14,18 @@ public class DongLeaderboardQueryRepository {
     @PersistenceContext
     private EntityManager em;
 
-    // 특정 동(dongName)에서 완료된 퀘스트 기준
-    // 유저별 누적 rewardPoint 합계를 구해 점수 순으로 정렬
-
-    public List<DongLeaderboardResponse.Player> findDongLeaderboardByDongName(String dongName) {
-
+    /**
+     * 🔹 특정 동(dongName) + 시즌 기간(start~end) 안에서
+     * 완료된 퀘스트의 rewardPoint 합계를 유저별로 집계
+     */
+    public List<DongLeaderboardResponse.Player> findDongLeaderboardByDongNameAndPeriod(
+            String dongName,
+            LocalDateTime start,
+            LocalDateTime end
+    ) {
         String jpql =
                 "SELECT new org.battlemap.battlemapbe.dto.league.DongLeaderboardResponse$Player(" +
-                        "       uq.users.name, " +              // Users.name
+                        "       uq.users.name, " +
                         "       SUM(q.rewardPoint)" +
                         ") " +
                         "FROM UserQuests uq " +
@@ -28,11 +33,14 @@ public class DongLeaderboardQueryRepository {
                         "JOIN q.stores s " +
                         "WHERE uq.isCompleted = true " +
                         "  AND s.dongs.dongName = :dongName " +
+                        "  AND uq.completedAt BETWEEN :start AND :end " +  // ✅ 시즌 기간 내만 집계
                         "GROUP BY uq.users.name " +
                         "ORDER BY SUM(q.rewardPoint) DESC";
 
         return em.createQuery(jpql, DongLeaderboardResponse.Player.class)
                 .setParameter("dongName", dongName)
+                .setParameter("start", start)
+                .setParameter("end", end)
                 .getResultList();
     }
 }
