@@ -72,20 +72,23 @@ jobs:
 
             echo ">>> Starting battlemap-be in $APP_DIR ..."
             cd $APP_DIR
+
+            # 🚀 따옴표 추가하여 공백 문제 해결
             nohup java -jar \
-              -Dspring.datasource.url=${{ secrets.DB_URL }} \
-              -Dspring.datasource.username=${{ secrets.DB_USERNAME }} \
-              -Dspring.datasource.password=${{ secrets.DB_PASSWORD }} \
+              -Dspring.datasource.url="${{ secrets.DB_URL }}" \
+              -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
+              -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
               -Dspring.jpa.hibernate.ddl-auto=update \
               -Dserver.port=8080 \
-              -Dkakao.api.key=${{ secrets.KAKAO_API_KEY }} \
-              $JAR_FILE > log.out 2>&1 &
+              -Dkakao.api.key="${{ secrets.KAKAO_API_KEY }}" \
+              "$JAR_FILE" > log.out 2>&1 &
 
             echo ">>> Waiting for app to start..."
             sleep 15
 
             if pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' > /dev/null; then
               echo "✅ Application is running on EC2!"
+              tail -n 10 log.out
             else
               echo "❌ Application failed to start"
               echo "=== Last 40 lines of log.out ==="
