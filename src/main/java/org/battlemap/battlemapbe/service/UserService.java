@@ -63,8 +63,6 @@ public class UserService {
         // DTO 생성
         return LoginResponse.builder()
                 .userId(user.getUserId())
-                .id(user.getId())
-                .token(token)
                 .build();
     }
     // 보유 포인트 조회
