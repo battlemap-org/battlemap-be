@@ -67,6 +67,7 @@ jobs:
               -Dspring.datasource.password=${{ secrets.DB_PASSWORD }} \
               -Dspring.jpa.hibernate.ddl-auto=update \
               -Dserver.port=8080 \
+              -Dserver.address=0.0.0.0 \
               -Dkakao.api.key=${{ secrets.KAKAO_API_KEY }} \
               battlemap-be-0.0.1-SNAPSHOT.jar > log.out 2>&1 &
             echo ">>> Waiting for app to start..."
