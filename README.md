@@ -8,7 +8,8 @@
 ## ⚙️ Tech Stack
 - **Language/Framework**: Java 21, Spring Boot 3
 - **Build Tool**: Gradle (Kotlin DSL)
-- **DB**: PostgreSQL 16 (Docker)
+- **DB엔진**: MySQL 8.0
+- **Docker 컨테이너명**: mysql-dev
 - **Cache/RT**: Redis 7 (Docker), WebSocket/SSE
 - **DB Migration**: Flyway
 - **Auth**: (초기 개발 단계) Spring Security 임시 오픈 → 추후 JWT/토큰 전환 예정
