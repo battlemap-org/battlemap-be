@@ -43,15 +43,15 @@ jobs:
             mkdir -p /home/ubuntu/app
             echo "✅ Clean workspace ready."
 
-      # 5️⃣ 새 JAR 업로드 (⚠️ 슬래시 제거하여 중첩 방지)
+      # 5️⃣ 새 JAR 업로드 (절대경로 지정 — 중첩 완전 방지)
       - name: Upload new JAR to EC2
-        uses: appleboy/scp-action@v0.1.4
+        uses: appleboy/scp-action@master  # ✅ 최신버전 강제
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
-          source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/app   # ✅ 슬래시 제거: 중첩 build/libs 방지
+          source: ./build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
+          target: /home/ubuntu/app/battlemap-be-0.0.1-SNAPSHOT.jar  # ✅ 파일 위치 직접 지정
 
       # 6️⃣ EC2에서 새 애플리케이션 실행
       - name: Run Battlemap on EC2
@@ -71,7 +71,7 @@ jobs:
               -Dspring.jpa.hibernate.ddl-auto=update \
               -Dserver.port=8080 \
               -Dkakao.api.key="${{ secrets.KAKAO_API_KEY }}" \
-              battlemap-be-0.0.1-SNAPSHOT.jar > log.out 2>&1 &
+              /home/ubuntu/app/battlemap-be-0.0.1-SNAPSHOT.jar > log.out 2>&1 &
 
             echo "⏳ Waiting for app to start..."
             sleep 15
