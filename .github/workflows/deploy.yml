@@ -13,12 +13,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. JDK 21 설치
+      # 2. JDK 21 설치 + Gradle 캐시
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: gradle
 
       # 3. Gradle 빌드
       - name: Build project
@@ -26,7 +27,7 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # 4. EC2 기존 프로세스 종료 및 이전 jar 제거
+      # 4. EC2 기존 프로세스 종료 및 이전 파일 삭제
       - name: Stop old process on EC2
         uses: appleboy/ssh-action@v1.0.3
         continue-on-error: true
@@ -41,8 +42,8 @@ jobs:
             echo "✅ Old process terminated if existed"
 
             echo ">>> Cleaning old jar & log..."
-            rm -f /home/ubuntu/battlemap-be/build/libs/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-            rm -f /home/ubuntu/battlemap-be/build/libs/build/libs/log.out
+            rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
+            rm -f /home/ubuntu/log.out
 
       # 5. 새 jar 업로드
       - name: Upload new jar to EC2
@@ -52,9 +53,9 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/battlemap-be/build/libs/build/libs/
+          target: /home/ubuntu/
 
-      # 6. EC2 서버에서 새 앱 실행
+      # 6. EC2에서 새 앱 실행
       - name: Run new application on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -63,16 +64,16 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             echo ">>> Starting battlemap-be..."
-            cd /home/ubuntu/battlemap-be/build/libs/build/libs
+            cd /home/ubuntu
 
-            nohup java -jar \
-              -Dspring.datasource.url=${{ secrets.DB_URL }}
+            nohup java \
+              -Dspring.datasource.url=${{ secrets.DB_URL }} \
               -Dspring.datasource.username=${{ secrets.DB_USER_NAME }} \
               -Dspring.datasource.password=${{ secrets.DB_PASSWORD }} \
               -Dspring.jpa.hibernate.ddl-auto=update \
               -Dserver.port=8080 \
               -Dkakao.api.key=${{ secrets.KAKAO_API_KEY }} \
-              battlemap-be-0.0.1-SNAPSHOT.jar > log.out 2>&1 &
+              -jar battlemap-be-0.0.1-SNAPSHOT.jar > log.out 2>&1 &
 
             echo ">>> Waiting for app to start..."
             sleep 15
