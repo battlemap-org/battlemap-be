@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class LoginResponse {
-    private Long user_id;
+    private Long userId;
     private String id;
     private String name;
     private String email;
