@@ -41,6 +41,7 @@ jobs:
             sleep 3
             echo ">>> Deleting old files..."
             rm -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar
+            rm -f /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
             rm -f /home/ubuntu/log.out
             echo "✅ Cleanup done"
 
@@ -63,7 +64,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             echo ">>> Checking if JAR exists..."
-            if [ ! -f /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar ]; then
+            if [ ! -f /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar ]; then
               echo "❌ JAR file not found!"
               exit 1
             fi
@@ -77,7 +78,7 @@ jobs:
               -Dspring.datasource.password=${{ secrets.DB_PASSWORD }} \
               -Dspring.jpa.hibernate.ddl-auto=update \
               -Dkakao.api.key=${{ secrets.KAKAO_API_KEY }} \
-              -jar /home/ubuntu/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 &
+              -jar /home/ubuntu/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar > /home/ubuntu/log.out 2>&1 &
 
             echo ">>> Waiting for app to start..."
             sleep 15
