@@ -1,6 +1,5 @@
 package org.battlemap.battlemapbe.repository;
 
-import org.battlemap.battlemapbe.dto.Quests.QuestCountByDongDto;
 import org.battlemap.battlemapbe.dto.region.UserDongPointResponse;
 import org.battlemap.battlemapbe.model.Quests;
 import org.battlemap.battlemapbe.model.Users;
@@ -14,17 +13,6 @@ import java.util.Optional;
 
 public interface UserQuestsRepository extends JpaRepository<UserQuests, Long> {
     Optional<UserQuests> findByUsersAndQuests(Users users, Quests quests);
-
-    // 지역 별 완료 퀘스트 조회
-    @Query("SELECT new org.battlemap.battlemapbe.dto.Quests.QuestCountByDongDto(" +
-            "s.dongs.dongId, s.dongs.dongName, COUNT(uq)) " +
-            "FROM UserQuests uq " +
-            "JOIN uq.quests q " +
-            "JOIN q.stores s " +
-            "WHERE uq.isCompleted = true " +
-            "GROUP BY s.dongs.dongId, s.dongs.dongName " +
-            "ORDER BY COUNT(uq) DESC")
-    List<QuestCountByDongDto> countCompletedByDong();
 
     @Query("SELECT new org.battlemap.battlemapbe.dto.region.UserDongPointResponse(" +
             "d.dongName, " +
@@ -46,5 +34,6 @@ public interface UserQuestsRepository extends JpaRepository<UserQuests, Long> {
             @Param("cityName") String cityName
     );
 
-
+    // 사용자 기반 퀘스트 수 조회 (마이페이지)
+    long countByUsers(Users user);
 }

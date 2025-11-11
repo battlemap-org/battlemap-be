@@ -3,6 +3,7 @@ package org.battlemap.battlemapbe.controller;
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.model.response.ApiResponse;
+import org.battlemap.battlemapbe.dto.login.LoginResponse;
 import org.battlemap.battlemapbe.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,12 +28,12 @@ public class UserController {
         );
     }
 
-    // 로그인
+    // 로그인 (LoginResponse DTO 반환)
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<Map<String, String>>> login(@RequestBody Users user) {
-        String token = userService.login(user.getId(), user.getPw());
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody Users user) {
+        LoginResponse response = userService.login(user.getId(), user.getPw());
         return ResponseEntity.ok(
-                ApiResponse.success(Map.of("token", token), 200)
+                ApiResponse.success(response, 200)
         );
     }
 

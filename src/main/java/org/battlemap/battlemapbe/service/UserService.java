@@ -1,8 +1,10 @@
 package org.battlemap.battlemapbe.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.model.exception.CustomException;
+import org.battlemap.battlemapbe.dto.login.LoginResponse;
 import org.battlemap.battlemapbe.repository.UserRepository;
 import org.battlemap.battlemapbe.security.JwtTokenProvider;
 import org.springframework.http.HttpStatus;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
@@ -44,7 +47,7 @@ public class UserService {
     }
 
     // 로그인
-    public String login(String id, String pw) {
+    public LoginResponse login(String id, String pw) {
         Users user = userRepository.findByLoginId(id)
                 .orElseThrow(() -> new CustomException("USER_404", "잘못된 아이디 또는 비밀번호입니다.", HttpStatus.NOT_FOUND));
 
@@ -52,14 +55,20 @@ public class UserService {
             throw new CustomException("USER_401", "잘못된 아이디 또는 비밀번호입니다.", HttpStatus.UNAUTHORIZED);
         }
 
-        // JWT 토큰 생성 및 저장
+        // JWT 토큰 생성
         String token = jwtTokenProvider.generateToken(user.getId());
         user.setToken(token);
         userRepository.save(user);
 
-        return token;
+        // DTO 생성
+        return LoginResponse.builder()
+                .userId(user.getUserId())
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .token(token)
+                .build();
     }
-
     // 보유 포인트 조회
     public int getUserPoints(String loginId) {
         Users user = userRepository.findByLoginId(loginId)

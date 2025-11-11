@@ -30,8 +30,13 @@ public class Leagues {
     @Column(name = "endDate", nullable = false)
     private LocalDateTime endDate; // 리그 종료 일자 및 시간
 
+    // ✅ 시즌 정산 여부 (보너스 중복 지급 방지)
+    @Column(name = "settled", nullable = false)
+    @Builder.Default
+    private boolean settled = false;
+
     // 매핑
     @OneToMany(mappedBy = "leagues", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<UserLeagues> UserLeaguesList = new ArrayList<>(); // userleagues
+    private List<UserLeagues> userLeaguesList = new ArrayList<>(); // userleagues
 }

@@ -72,12 +72,4 @@ public class QuestController {
         return ResponseEntity.ok(ApiResponse.success(response, 200));
     }
 
-    // 지역별 완료 미션 개수 조회
-    @GetMapping("/regions/dongs/completed")
-    public ResponseEntity<?> getCompletedCountByDong(
-            Authentication authentication) {
-        String loginId = authentication.getName();
-        List<QuestCountByDongDto> countResponse = questService.getCompletedCountByDong(loginId);
-        return ResponseEntity.ok(ApiResponse.success(countResponse, 200));
-    }
 }
