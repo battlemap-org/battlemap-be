@@ -3,6 +3,7 @@ package org.battlemap.battlemapbe.service;
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.model.exception.CustomException;
+import org.battlemap.battlemapbe.dto.login.LoginResponse;
 import org.battlemap.battlemapbe.repository.UserRepository;
 import org.battlemap.battlemapbe.security.JwtTokenProvider;
 import org.springframework.http.HttpStatus;
@@ -44,7 +45,7 @@ public class UserService {
     }
 
     // 로그인
-    public String login(String id, String pw) {
+    public LoginResponse login(String id, String pw) {
         Users user = userRepository.findByLoginId(id)
                 .orElseThrow(() -> new CustomException("USER_404", "잘못된 아이디 또는 비밀번호입니다.", HttpStatus.NOT_FOUND));
 
@@ -57,7 +58,14 @@ public class UserService {
         user.setToken(token);
         userRepository.save(user);
 
-        return token;
+        // DTO 객체로 변환하여 반환
+        return LoginResponse.builder()
+                .user_id(user.getUserId())
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .token(token)
+                .build();
     }
 
     // 보유 포인트 조회
