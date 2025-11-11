@@ -39,10 +39,11 @@ jobs:
             pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
             sleep 5
             echo "🧹 Removing old files..."
-            rm -f /home/ubuntu/app/battlemap-be-0.0.1-SNAPSHOT.jar
-            rm -f /home/ubuntu/app/log.out
+            rm -rf /home/ubuntu/app
+            mkdir -p /home/ubuntu/app
+            echo "✅ Clean workspace ready."
 
-      # 5️⃣ 새 JAR 업로드 (정확한 경로)
+      # 5️⃣ 새 JAR 업로드 (경로 중첩 방지)
       - name: Upload new JAR to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -77,9 +78,11 @@ jobs:
 
             if pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' > /dev/null; then
               echo "✅ SUCCESS: Battlemap is running!"
-              tail -n 20 log.out
+              echo "=== Last 15 lines of log.out ==="
+              tail -n 15 log.out
             else
               echo "❌ ERROR: App failed to start."
+              echo "=== Last 40 lines of log.out ==="
               tail -n 40 log.out
               exit 1
             fi
