@@ -1,33 +1,33 @@
-name: CI/CD (Stable)
+name: CI/CD (Battlemap Stable)
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       # 1️⃣ 저장소 체크아웃
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       # 2️⃣ JDK 21 설치
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
 
-      # 3️⃣ Gradle 빌드 (테스트 제외)
+      # 3️⃣ Gradle 빌드 (테스트 생략)
       - name: Build project
         run: |
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # 4️⃣ EC2에서 기존 프로세스 종료 및 이전 파일 정리
-      - name: Stop old process on EC2
+      # 4️⃣ EC2 기존 프로세스 종료 및 파일 정리
+      - name: Stop old process and clean EC2
         uses: appleboy/ssh-action@v1.0.3
         continue-on-error: true
         with:
@@ -35,37 +35,34 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
-            echo ">>> 🔻 Stopping old process..."
+            echo "🔻 Stopping old Battlemap process..."
             pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
-            sleep 3
-            echo ">>> 🧹 Cleaning old files..."
-            rm -f /home/ubuntu/app/build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-            rm -f /home/ubuntu/app/build/libs/log.out
-            echo "✅ Old process stopped and files cleaned."
+            sleep 5
+            echo "🧹 Removing old files..."
+            rm -f /home/ubuntu/app/battlemap-be-0.0.1-SNAPSHOT.jar
+            rm -f /home/ubuntu/app/log.out
 
-      # 5️⃣ 새로운 JAR 업로드 (실제 빌드 경로에 맞게)
-      - name: Upload new jar to EC2
+      # 5️⃣ 새 JAR 업로드 (정확한 경로)
+      - name: Upload new JAR to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/app/build/libs/
+          target: /home/ubuntu/app/
 
       # 6️⃣ EC2에서 새 애플리케이션 실행
-      - name: Run new application on EC2
+      - name: Run Battlemap on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
-            APP_DIR=/home/ubuntu/app/build/libs
-            JAR_FILE=battlemap-be-0.0.1-SNAPSHOT.jar
+            echo "🚀 Starting Battlemap..."
+            cd /home/ubuntu/app
 
-            echo ">>> 🚀 Starting Battlemap server..."
-            cd $APP_DIR
             nohup java -jar \
               -Dspring.datasource.url="${{ secrets.DB_URL }}" \
               -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
@@ -73,17 +70,16 @@ jobs:
               -Dspring.jpa.hibernate.ddl-auto=update \
               -Dserver.port=8080 \
               -Dkakao.api.key="${{ secrets.KAKAO_API_KEY }}" \
-              "$JAR_FILE" > log.out 2>&1 &
+              battlemap-be-0.0.1-SNAPSHOT.jar > log.out 2>&1 &
 
-            echo ">>> ⏳ Waiting for app to start..."
+            echo "⏳ Waiting for app to start..."
             sleep 15
 
-            if pgrep -f "$JAR_FILE" > /dev/null; then
-              echo "✅ SUCCESS: Application is running with the latest JAR!"
-              tail -n 15 log.out
+            if pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' > /dev/null; then
+              echo "✅ SUCCESS: Battlemap is running!"
+              tail -n 20 log.out
             else
-              echo "❌ ERROR: Application failed to start."
-              echo "=== Last 40 lines of log.out ==="
+              echo "❌ ERROR: App failed to start."
               tail -n 40 log.out
               exit 1
             fi
