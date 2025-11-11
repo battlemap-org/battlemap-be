@@ -2,7 +2,7 @@ package org.battlemap.battlemapbe.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.repository.DongsRepository;
-import org.battlemap.battlemapbe.response.DongResponse;
+import org.battlemap.battlemapbe.dto.DongResponseDto;
 import org.battlemap.battlemapbe.service.CategoryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,7 +21,7 @@ public class DongController {
 
     // 부천시 동 목록 조회
     @GetMapping("/{cityName}/dongs")
-    public ResponseEntity<List<DongResponse>> getDongsByCity(
+    public ResponseEntity<List<DongResponseDto>> getDongsByCity(
             Authentication authentication,
             @PathVariable String cityName
     ) {
@@ -29,9 +29,9 @@ public class DongController {
             return ResponseEntity.status(401).build();
         }
 
-        List<DongResponse> dongs = dongsRepository.findByCities_CityName(cityName)
+        List<DongResponseDto> dongs = dongsRepository.findByCities_CityName(cityName)
                 .stream()
-                .map(DongResponse::from)
+                .map(DongResponseDto::from)
                 .toList();
 
         return ResponseEntity.ok(dongs);
