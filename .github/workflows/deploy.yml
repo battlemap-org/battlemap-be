@@ -9,24 +9,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ 저장소 체크아웃
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2️⃣ JDK 21 설치
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: "21"
           distribution: "temurin"
 
-      # 3️⃣ Gradle 빌드 (테스트 생략)
       - name: Build project
         run: |
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # 4️⃣ EC2 기존 프로세스 종료 및 정리
       - name: Stop old process and clean EC2
         uses: appleboy/ssh-action@v1.0.3
         continue-on-error: true
@@ -38,13 +34,11 @@ jobs:
             echo "🔻 Stopping old Battlemap process..."
             pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
             sleep 5
-
             echo "🧹 Cleaning app directory..."
             sudo rm -rf /home/ubuntu/app
             mkdir -p /home/ubuntu/app
             echo "✅ Clean workspace ready."
 
-      # 5️⃣ 새 JAR 업로드 (정상 단일 파일 전송)
       - name: Copy JAR file to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -53,8 +47,8 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           source: "build/libs/battlemap-be-0.0.1-SNAPSHOT.jar"
           target: "/home/ubuntu/app/"
+          strip_components: 2    # ✅ 핵심 수정 포인트!
 
-      # 6️⃣ EC2에서 애플리케이션 실행
       - name: Run Battlemap on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
