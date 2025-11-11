@@ -26,7 +26,7 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # 4️⃣ EC2 기존 프로세스 종료 및 파일 정리
+      # 4️⃣ EC2 기존 프로세스 종료 및 정리
       - name: Stop old process and clean EC2
         uses: appleboy/ssh-action@v1.0.3
         continue-on-error: true
@@ -38,22 +38,23 @@ jobs:
             echo "🔻 Stopping old Battlemap process..."
             pkill -f 'battlemap-be-0.0.1-SNAPSHOT.jar' || true
             sleep 5
-            echo "🧹 Removing old files..."
-            rm -rf /home/ubuntu/app
+
+            echo "🧹 Cleaning app directory..."
+            sudo rm -rf /home/ubuntu/app
             mkdir -p /home/ubuntu/app
             echo "✅ Clean workspace ready."
 
-      # 5️⃣ 새 JAR 업로드 (절대경로 지정 — 중첩 완전 방지)
+      # 5️⃣ 새 JAR 업로드 (중첩 방지용 — tmp 이름으로 전송)
       - name: Upload new JAR to EC2
-        uses: appleboy/scp-action@master  # ✅ 최신버전 강제
+        uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: ./build/libs/battlemap-be-0.0.1-SNAPSHOT.jar
-          target: /home/ubuntu/app/battlemap-be-0.0.1-SNAPSHOT.jar  # ✅ 파일 위치 직접 지정
+          target: /home/ubuntu/app/tmp-battlemap.jar
 
-      # 6️⃣ EC2에서 새 애플리케이션 실행
+      # 6️⃣ EC2에서 애플리케이션 실행 (파일 이동 후 실행)
       - name: Run Battlemap on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -61,9 +62,15 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
-            echo "🚀 Starting Battlemap..."
-            cd /home/ubuntu/app
+            APP_DIR=/home/ubuntu/app
+            JAR_FILE=$APP_DIR/battlemap-be-0.0.1-SNAPSHOT.jar
+            LOG_FILE=$APP_DIR/log.out
 
+            echo "🚀 Moving new JAR into place..."
+            mv $APP_DIR/tmp-battlemap.jar $JAR_FILE
+            chmod +x $JAR_FILE
+
+            echo "🚀 Starting Battlemap application..."
             nohup java -jar \
               -Dspring.datasource.url="${{ secrets.DB_URL }}" \
               -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
@@ -71,7 +78,7 @@ jobs:
               -Dspring.jpa.hibernate.ddl-auto=update \
               -Dserver.port=8080 \
               -Dkakao.api.key="${{ secrets.KAKAO_API_KEY }}" \
-              /home/ubuntu/app/battlemap-be-0.0.1-SNAPSHOT.jar > log.out 2>&1 &
+              $JAR_FILE > $LOG_FILE 2>&1 &
 
             echo "⏳ Waiting for app to start..."
             sleep 15
@@ -79,10 +86,10 @@ jobs:
             if pgrep -f 'battlemap-be-0.0.1-SNAPSHOT.jar' > /dev/null; then
               echo "✅ SUCCESS: Battlemap is running!"
               echo "=== Last 15 lines of log.out ==="
-              tail -n 15 log.out
+              tail -n 15 $LOG_FILE
             else
               echo "❌ ERROR: App failed to start."
               echo "=== Last 40 lines of log.out ==="
-              tail -n 40 log.out
+              tail -n 40 $LOG_FILE
               exit 1
             fi
