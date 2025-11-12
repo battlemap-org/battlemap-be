@@ -16,7 +16,7 @@ public class UserQuestService {
     private final UserRepository userRepository;
     private final UserQuestsRepository userQuestsRepository;
 
-    // 사용자 기반 퀘스트 수 조회 (마이페이지)
+    // 🔹 전체 퀘스트 수 조회
     @Transactional(readOnly = true)
     public Map<String, Object> getQuestCountByLoginId(String loginId) {
         Users user = userRepository.findByLoginId(loginId)
@@ -24,5 +24,15 @@ public class UserQuestService {
 
         long totalCount = userQuestsRepository.countByUsers(user);
         return Map.of("totalCount", totalCount);
+    }
+
+    // 🔹 완료된 퀘스트 수 조회
+    @Transactional(readOnly = true)
+    public Map<String, Object> getCompletedQuestCountByLoginId(String loginId) {
+        Users user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND: " + loginId));
+
+        long totalComplete = userQuestsRepository.countByUsersAndIsCompletedTrue(user);
+        return Map.of("totalComplete", totalComplete);
     }
 }
