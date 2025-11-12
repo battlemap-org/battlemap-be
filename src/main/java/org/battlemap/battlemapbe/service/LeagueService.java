@@ -5,12 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.dto.league.LeaderboardResponseDto;
 import org.battlemap.battlemapbe.model.Leagues;
 import org.battlemap.battlemapbe.model.Users;
-import org.battlemap.battlemapbe.model.exception.CustomException; // 💡 추가: CustomException import
+import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.model.mapping.UserLeagues;
 import org.battlemap.battlemapbe.repository.LeaguesRepository;
 import org.battlemap.battlemapbe.repository.UserLeagueRepository;
 import org.battlemap.battlemapbe.repository.UserRepository;
-import org.springframework.http.HttpStatus; // 💡 추가: HttpStatus import
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -29,12 +29,19 @@ public class LeagueService {
     private final LeaguesRepository leaguesRepository;
 
 
-    // 💡 추가된 메서드: 현재 진행 중인 리그 조회 (QuestService에서 사용)
+    // 💡 수정된 메서드: 현재 진행 중인 리그 조회 (QuestService에서 사용)
+    // 🌟 리그가 없으면 자동으로 새 시즌을 생성하도록 수정 🌟
     public Leagues getCurrentLeagueOrThrow() {
         LocalDateTime now = LocalDateTime.now();
-        // findCurrentLeague는 LeaguesRepository에 이미 정의되어 있습니다.
+
+        // 🌟 수정: 리그가 없으면 createNextMonthlyLeague를 호출하여 생성합니다.
         return leaguesRepository.findCurrentLeague(now)
-                .orElseThrow(() -> new CustomException("LEAGUE_NOT_FOUND", "현재 진행 중인 리그 시즌을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+                .orElseGet(() -> {
+                    // QuestService는 cityName 정보를 직접 전달받지 않으므로,
+                    // createNextMonthlyLeague 메서드가 동작할 수 있도록 "부천시"를 기본값으로 사용합니다.
+                    System.out.println("⚠️ League not found. Creating a new monthly league for Bucheon-si.");
+                    return createNextMonthlyLeague(now, "부천시");
+                });
     }
 
 
@@ -60,6 +67,7 @@ public class LeagueService {
         int myRank = 0;            // 내가 리더보드에 들었으면 순위, 아니면 0
         int mySeasonPoint = 0;     // 내 시즌 포인트 (없으면 0)
         String myNickname = me.getName();
+        String myUserColorCode = me.getUserColorCode(); // 내 색상 코드 조회
 
         for (UserLeagues ul : userLeagues) {
             Users u = ul.getUsers();
@@ -79,6 +87,7 @@ public class LeagueService {
                     .rank(rank)
                     .nickname(u.getName())
                     .totalPoints(leaguePoint)
+                    .userColorCode(u.getUserColorCode()) // 사용자 색상 코드 포함
                     .build());
 
             // 내 순위 / 포인트 세팅
@@ -92,7 +101,7 @@ public class LeagueService {
 
         String remainingTime = buildRemainingTime(now, currentLeague.getEndDate());
 
-        return new LeagueResponse(leaderboard, myRank, myNickname, mySeasonPoint, remainingTime);
+        return new LeagueResponse(leaderboard, myRank, myNickname, mySeasonPoint, myUserColorCode, remainingTime);
     }
 
     // 🔹 endDate 지난 시즌들 정산 (스케줄러 / 수동에서 호출)
@@ -141,7 +150,7 @@ public class LeagueService {
         leaguesRepository.save(league);
     }
 
-    // 🔹 진행 중인 리그가 없으면 "다음 시즌" 자동 생성
+    // 진행 중인 리그가 없으면 "다음 시즌" 자동 생성
     // 시즌: 매달 1일 00:00 ~ 말일 23:59:59
     private Leagues createNextMonthlyLeague(LocalDateTime now, String cityName) {
         YearMonth ym = YearMonth.from(now);
@@ -183,6 +192,7 @@ public class LeagueService {
             int myRank,
             String myNickname,
             int mySeasonPoint,
+            String myUserColorCode, // 사용자 본인 색상 코드 필드
             String remainingTime
     ) {}
 }
