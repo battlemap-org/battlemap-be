@@ -5,10 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.dto.league.LeaderboardResponseDto;
 import org.battlemap.battlemapbe.model.Leagues;
 import org.battlemap.battlemapbe.model.Users;
+import org.battlemap.battlemapbe.model.exception.CustomException; // 💡 추가: CustomException import
 import org.battlemap.battlemapbe.model.mapping.UserLeagues;
 import org.battlemap.battlemapbe.repository.LeaguesRepository;
 import org.battlemap.battlemapbe.repository.UserLeagueRepository;
 import org.battlemap.battlemapbe.repository.UserRepository;
+import org.springframework.http.HttpStatus; // 💡 추가: HttpStatus import
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -25,6 +27,16 @@ public class LeagueService {
     private final UserLeagueRepository userLeagueRepository;
     private final UserRepository userRepository;
     private final LeaguesRepository leaguesRepository;
+
+
+    // 💡 추가된 메서드: 현재 진행 중인 리그 조회 (QuestService에서 사용)
+    public Leagues getCurrentLeagueOrThrow() {
+        LocalDateTime now = LocalDateTime.now();
+        // findCurrentLeague는 LeaguesRepository에 이미 정의되어 있습니다.
+        return leaguesRepository.findCurrentLeague(now)
+                .orElseThrow(() -> new CustomException("LEAGUE_NOT_FOUND", "현재 진행 중인 리그 시즌을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+    }
+
 
     // 🔹 이번 시즌 리더보드 조회
     public LeagueResponse getMonthlyLeaderboard(String loginId, String cityName) {

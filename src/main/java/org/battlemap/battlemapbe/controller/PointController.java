@@ -30,6 +30,7 @@ public class PointController {
         );
     }
 
+    // 한 달마다 리셋 후 다음 시즌으로 갱신
     // 나의 동별 포인트 & 완료 퀘스트 수 조회 (/api/users/me/cities/{cityName}/dongs/points-and-quests)
     @GetMapping("/users/me/cities/{cityName}/dongs/points-and-quests")
     public ResponseEntity<ApiResponse<List<UserDongPointResponse>>> getMyDongPointsAndQuests(
