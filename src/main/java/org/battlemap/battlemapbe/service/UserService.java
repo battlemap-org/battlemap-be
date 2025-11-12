@@ -42,7 +42,7 @@ public class UserService {
         }
         //  기본 포인트 설정 (없으면 2000으로)
         if (user.getPoint() == 0) {
-            user.setPoint(2000);
+            user.setPoint(3000);
         }
         // 비밀번호 암호화 후 저장
         user.setPw(passwordEncoder.encode(user.getPw()));
