@@ -45,4 +45,14 @@ public class UserController {
                 ApiResponse.success(Map.of("message", "로그아웃 성공"), 200)
         );
     }
+    // 사용자 이름 조회
+    @GetMapping("/name")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getUserName(
+            @RequestHeader("Authorization") String token) {
+
+        Map<String, Object> result = userService.getUserNameByToken(token);
+        return ResponseEntity.ok(
+                ApiResponse.success(result, 200)
+        );
+    }
 }

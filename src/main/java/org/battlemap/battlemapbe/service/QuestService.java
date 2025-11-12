@@ -29,6 +29,7 @@ public class QuestService {
     private final UserRepository userRepository;
     private final UserQuestsRepository userQuestsRepository;
     private final UserLeagueRepository userLeagueRepository;
+    private final LeagueService leagueService;
 
     // 퀘스트 템플릿
     private static final List<String> QUEST_TEMPLATES = List.of(
@@ -132,9 +133,23 @@ public class QuestService {
 
         // 정답일 경우 포인트 지급
         if (isCorrect) {
-            UserLeagues userLeague = userLeagueRepository.findByUsers(user)
-                    .orElseThrow(() -> new CustomException("LEAGUE_NOT_FOUND", "해당 사용자의 리그 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+            // 현재 진행 중인 리그(시즌)를 찾음
+            var currentLeague = leagueService.getCurrentLeagueOrThrow();
 
+            // 사용자 + 현재 리그 조합으로 UserLeagues 조회 및 없으면 새로 생성
+            UserLeagues userLeague = userLeagueRepository.findByUsersAndLeagues(user, currentLeague)
+                    .orElseGet(() -> {
+                        // 해당 시즌 첫 퀘스트이므로 새로 생성
+                        UserLeagues newUserLeague = UserLeagues.builder()
+                                .users(user)
+                                .leagues(currentLeague)
+                                .leaguePoint(0)
+                                .userRank(0) // 추가: user_rank에 0으로 기본값 설정
+                                .build();
+                        return userLeagueRepository.save(newUserLeague);
+                    });
+
+            // 리그 포인트 업데이트 및 저장
             int currentPoint = userLeague.getLeaguePoint();
             userLeague.setLeaguePoint(currentPoint + reward);
             userLeagueRepository.save(userLeague);
