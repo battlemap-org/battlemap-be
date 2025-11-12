@@ -29,16 +29,16 @@ public class LeagueService {
     private final LeaguesRepository leaguesRepository;
 
 
-    // 💡 수정된 메서드: 현재 진행 중인 리그 조회 (QuestService에서 사용)
-    // 🌟 리그가 없으면 자동으로 새 시즌을 생성하도록 수정 🌟
+    // 수정된 메서드: 현재 진행 중인 리그 조회 (QuestService에서 사용)
+    // 리그가 없으면 자동으로 새 시즌을 생성하도록 수정
     public Leagues getCurrentLeagueOrThrow() {
         LocalDateTime now = LocalDateTime.now();
 
-        // 🌟 수정: 리그가 없으면 createNextMonthlyLeague를 호출하여 생성합니다.
+        // 리그가 없으면 createNextMonthlyLeague를 호출하여 생성
         return leaguesRepository.findCurrentLeague(now)
                 .orElseGet(() -> {
                     // QuestService는 cityName 정보를 직접 전달받지 않으므로,
-                    // createNextMonthlyLeague 메서드가 동작할 수 있도록 "부천시"를 기본값으로 사용합니다.
+                    // createNextMonthlyLeague 메서드가 동작할 수 있도록 "부천시"를 기본값으로 사용
                     System.out.println("⚠️ League not found. Creating a new monthly league for Bucheon-si.");
                     return createNextMonthlyLeague(now, "부천시");
                 });

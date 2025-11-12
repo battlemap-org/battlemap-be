@@ -100,7 +100,7 @@ public class DongLeaderboardService {
         // 응답 DTO 구성
         // MyRank DTO에 본인 색상 코드를 추가합니다.
         DongLeaderboardResponse.MyRank meDto =
-                new DongLeaderboardResponse.MyRank(myRank, myName, myPoint, myColorCode); // 🌟 myColorCode 추가
+                new DongLeaderboardResponse.MyRank(myRank, myName, myPoint, myColorCode); // myColorCode 추가
 
         return DongLeaderboardResponse.builder()
                 .districtName(dongName)
