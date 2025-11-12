@@ -20,6 +20,12 @@ public class Stores {
     @Column(name = "storeName", nullable = false)
     private String storeName; // 가게 이름
 
+    @Column(name = "kakao_place_id", length = 30) // 카카오 플레이스 ID 저장
+    private String kakaoPlaceId;
+
+    @Column(name = "address") // 주소 저장
+    private String address;
+
     // 매핑
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dongId", nullable = false)

@@ -60,4 +60,5 @@ public class LeagueController {
 
         return ResponseEntity.ok(ApiResponse.success(response, 200));
     }
+
 }

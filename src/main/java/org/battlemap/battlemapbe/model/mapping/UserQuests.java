@@ -5,6 +5,8 @@ import lombok.*;
 import org.battlemap.battlemapbe.model.Quests;
 import org.battlemap.battlemapbe.model.Users;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "userQuests")
 @Getter
@@ -24,6 +26,9 @@ public class UserQuests {
 
     @Column(name = "userAnswer")
     private String userAnswer; // 사용자가 제출한 답변
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt; // 완료 시각
 
     // 매핑
     @ManyToOne(fetch = FetchType.LAZY)

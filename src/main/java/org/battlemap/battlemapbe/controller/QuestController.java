@@ -5,6 +5,7 @@ import org.battlemap.battlemapbe.dto.Quests.*;
 import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.model.response.ApiResponse;
 import org.battlemap.battlemapbe.service.QuestService;
+import org.battlemap.battlemapbe.service.StoreQuestService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,7 @@ import java.util.List;
 public class QuestController {
 
     private final QuestService questService;
+    private final StoreQuestService storeQuestService;
 
     // 퀘스트 목록 조회
     @GetMapping("/{storeId}/stores")
@@ -44,18 +46,6 @@ public class QuestController {
         return ResponseEntity.ok(ApiResponse.success(quest, 200));
     }
 
-    // 오늘의 퀘스트 조회
-    @GetMapping("/{todayQuestId}/today")
-    public ResponseEntity<ApiResponse<TodayQuestDto>> getTodayQuests(
-            Authentication authentication,
-            @PathVariable Long todayQuestId
-    ) {
-        String loginId = authentication.getName();
-        TodayQuestDto todayQuests = questService.getTodayQuestsByQuestId(loginId, todayQuestId);
-
-        return ResponseEntity.ok(ApiResponse.success(todayQuests, 200));
-    }
-
     // 퀘스트 답변 제출
     @PostMapping("/{questId}/answers")
     public ResponseEntity<ApiResponse<QuestAnswerResponseDto>> postAnswers(
@@ -72,4 +62,24 @@ public class QuestController {
         return ResponseEntity.ok(ApiResponse.success(response, 200));
     }
 
+
+    // 가게별 퀘스트 생성
+    @PostMapping("/{storeId}/stores")
+    public ResponseEntity<ApiResponse<?>> saveStoreAndCreateQuest(
+            Authentication authentication,
+            @PathVariable("storeId") String storeId,
+            @RequestBody StoreQuestRequestDto request
+    ) {
+        String loginId = authentication.getName();
+
+        var response = storeQuestService.handleStoreClick(
+                loginId,
+                storeId,
+                request.getDongId(),
+                request.getCategoryId(),
+                request.getStoreInfo()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(response, 200));
+    }
 }
