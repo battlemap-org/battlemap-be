@@ -24,11 +24,22 @@ public class Dongs {
     @Column(name = "dongName", nullable = false, length = 20)
     private String dongName; // 동 이름
 
+    // ✅ 카카오맵 / 실제 위치용
     @Column(name = "latitude")
     private Double latitude;
 
     @Column(name = "longitude")
     private Double longitude;
+
+    // ✅ 커스텀 이미지 좌표용
+    @Column(name = "mapX")
+    private Integer mapX;
+
+    @Column(name = "mapY")
+    private Integer mapY;
+
+    @Column(name = "radius")
+    private Integer radius;
 
     @OneToMany(mappedBy = "dongs", cascade = CascadeType.ALL)
     @Builder.Default
@@ -38,7 +49,7 @@ public class Dongs {
     @Builder.Default
     private List<Stores> storesList = new ArrayList<>();
 
-    // 부천시만 쓰는 구조라서 cascade = PERSIST/ALL 허용
+    // 부천시만 사용하는 구조라 cascade 허용
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "cityId", nullable = false)
     private Cities cities;
