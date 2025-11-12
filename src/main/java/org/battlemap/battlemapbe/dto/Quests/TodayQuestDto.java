@@ -14,6 +14,7 @@ public class TodayQuestDto {
     private Long todayQuestId;
     private String todayContent;
     private Integer todayPoint;
+    private Long dongId;
 
     // 오늘의 퀘스트 dto
     public static TodayQuestDto from(TodayQuests todayQuests) {
@@ -21,6 +22,7 @@ public class TodayQuestDto {
                 .todayQuestId(todayQuests.getTodayQuestId())
                 .todayContent(todayQuests.getTodayContent())
                 .todayPoint(todayQuests.getTodayPoint())
+                .dongId(todayQuests.getDongs().getDongId())
                 .build();
     }
 }

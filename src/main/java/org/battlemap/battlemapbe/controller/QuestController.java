@@ -46,18 +46,6 @@ public class QuestController {
         return ResponseEntity.ok(ApiResponse.success(quest, 200));
     }
 
-    // 오늘의 퀘스트 조회
-    @GetMapping("/{todayQuestId}/today")
-    public ResponseEntity<ApiResponse<TodayQuestDto>> getTodayQuests(
-            Authentication authentication,
-            @PathVariable Long todayQuestId
-    ) {
-        String loginId = authentication.getName();
-        TodayQuestDto todayQuests = questService.getTodayQuestsByQuestId(loginId, todayQuestId);
-
-        return ResponseEntity.ok(ApiResponse.success(todayQuests, 200));
-    }
-
     // 퀘스트 답변 제출
     @PostMapping("/{questId}/answers")
     public ResponseEntity<ApiResponse<QuestAnswerResponseDto>> postAnswers(

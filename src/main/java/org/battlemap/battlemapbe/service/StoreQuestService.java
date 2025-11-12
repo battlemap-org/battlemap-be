@@ -6,11 +6,7 @@ import org.battlemap.battlemapbe.model.Dongs;
 import org.battlemap.battlemapbe.model.Stores;
 import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.model.exception.CustomException;
-import org.battlemap.battlemapbe.repository.CategoryRepository;
-import org.battlemap.battlemapbe.repository.DongRepository;
-import org.battlemap.battlemapbe.repository.QuestsRepository;
-import org.battlemap.battlemapbe.repository.StoreRepository;
-import org.battlemap.battlemapbe.repository.UserRepository;
+import org.battlemap.battlemapbe.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +20,7 @@ public class StoreQuestService {
 
     private final UserRepository userRepository;
     private final StoreRepository storeRepository;
-    private final DongRepository dongRepository;
+    private final DongsRepository dongsRepository;
     private final CategoryRepository categoryRepository;
     private final QuestService questService;
     private final QuestsRepository questsRepository;
@@ -74,7 +70,7 @@ public class StoreQuestService {
 
         if (storeToUse == null) {
             // DB에 없으면 새로 저장하는 기존 로직
-            Dongs dong = dongRepository.findById(dongId)
+            Dongs dong = dongsRepository.findById(dongId)
                     .orElseThrow(() -> new CustomException("DONG_NOT_FOUND", "존재하지 않는 동입니다.", HttpStatus.NOT_FOUND));
             var category = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new CustomException("CATEGORY_NOT_FOUND", "존재하지 않는 카테고리입니다.", HttpStatus.NOT_FOUND));

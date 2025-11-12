@@ -7,7 +7,6 @@ import org.battlemap.battlemapbe.model.Quests;
 import org.battlemap.battlemapbe.model.Stores;
 import org.battlemap.battlemapbe.model.Users;
 import org.battlemap.battlemapbe.model.exception.CustomException;
-import org.battlemap.battlemapbe.model.mapping.TodayQuests;
 import org.battlemap.battlemapbe.model.mapping.UserLeagues;
 import org.battlemap.battlemapbe.model.mapping.UserQuests;
 import org.battlemap.battlemapbe.repository.*;
@@ -26,7 +25,6 @@ public class QuestService {
 
     private final QuestsRepository questsRepository;
     private final StoreRepository storeRepository;
-    private final TodayQuestRepository todayQuestRepository;
     private final UserRepository userRepository;
     private final UserQuestsRepository userQuestsRepository;
     private final UserLeagueRepository userLeagueRepository;
@@ -90,19 +88,6 @@ public class QuestService {
                         new CustomException("QUEST_404", "해당 퀘스트를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         return QuestDto.from(quest);
-    }
-
-    // 오늘의 퀘스트 조회
-    public TodayQuestDto getTodayQuestsByQuestId(String loginId, Long todayQuestId) {
-        // 사용자 검증
-        userRepository.findByLoginId(loginId)
-                .orElseThrow(() ->
-                        new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
-
-        TodayQuests todayQuest = todayQuestRepository.findById(todayQuestId)
-                // 퀘스트가 없는 경우 - 404
-                .orElseThrow(() -> new CustomException("QUEST_404", "TodayQuest 경로를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
-        return TodayQuestDto.from(todayQuest);
     }
 
     // 퀘스트 답변 제출
