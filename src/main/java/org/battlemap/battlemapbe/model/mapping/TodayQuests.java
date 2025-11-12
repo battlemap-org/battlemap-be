@@ -2,6 +2,8 @@ package org.battlemap.battlemapbe.model.mapping;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.battlemap.battlemapbe.model.Dongs;
+import org.battlemap.battlemapbe.model.global.BaseEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TodayQuests {
+public class TodayQuests extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "todayQuestId", nullable = false)
@@ -26,6 +28,14 @@ public class TodayQuests {
     private Integer todayPoint; // 오늘의 퀘스트 리워드 포인트
 
     // 매핑
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dong_id", nullable = false)
+    private Dongs dongs; // dongs
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Categories categories; // categories
+
     @OneToMany(mappedBy = "todayQuests", cascade = CascadeType.ALL)
     @Builder.Default
     private List<UserQuests> userQuestsList = new ArrayList<>(); // userquests
