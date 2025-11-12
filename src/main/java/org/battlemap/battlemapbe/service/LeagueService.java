@@ -35,7 +35,6 @@ public class LeagueService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // 🔴 여기서 500 나던 거 수정:
         // 진행 중인 리그 없으면 → 새 시즌 생성해서 사용
         Leagues currentLeague = leaguesRepository.findCurrentLeague(now)
                 .orElseGet(() -> createNextMonthlyLeague(now, cityName));
