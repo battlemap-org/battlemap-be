@@ -8,7 +8,6 @@ import org.battlemap.battlemapbe.repository.*;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.dto.Quests.TodayQuestDto;
-import org.battlemap.battlemapbe.dto.Quests.TodayQuestGenerateResponseDto;
 import org.battlemap.battlemapbe.model.Dongs;
 import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.model.mapping.Categories;
@@ -40,9 +39,9 @@ public class TodayQuestService {
     // 리워드 포인트 템플릿
     private static final List<Integer> BONUS_POINTS = List.of(30, 50, 70, 100);
 
-    // 오늘의 퀘스트 조회
-    @Transactional(readOnly = true)
-    public TodayQuestDto getDailyQuest(String loginId) {
+    // 오늘의 퀘스트 조회 (없으면 생성(
+    @Transactional
+    public TodayQuestDto getOrCreateDailyQuest(String loginId) {
         // 사용자 검증
         userRepository.findByLoginId(loginId)
                 .orElseThrow(() ->
@@ -53,38 +52,12 @@ public class TodayQuestService {
         LocalDateTime endOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
 
         TodayQuests todayQuest = todayQuestRepository.findFirstByCreatedAtBetween(startOfDay, endOfDay)
-                .orElseThrow(() -> new CustomException("QUEST_404", "오늘의 퀘스트가 아직 생성되지 않았습니다.", HttpStatus.NOT_FOUND));
+                .orElseGet(this::createNewDailyQuest); // 퀘스트가 없으면 createNewDailyQuest 호출
 
-        // DTO 반환
         return TodayQuestDto.from(todayQuest);
     }
 
-    // 오늘의 퀘스트 생성
-    @Transactional
-    public TodayQuestGenerateResponseDto generateDailyQuestIfNoneExists() {
-        // 오늘 생성된 퀘스트가 있는지 확인
-        LocalDateTime startOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
-        LocalDateTime endOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
-
-        Optional<TodayQuests> existingQuest = todayQuestRepository.findFirstByCreatedAtBetween(startOfDay, endOfDay);
-
-        // 퀘스트가 이미 존재하면 메시지를 포함하여 반환
-        if (existingQuest.isPresent()) {
-            return new TodayQuestGenerateResponseDto(
-                    TodayQuestDto.from(existingQuest.get()),
-                    "이미 퀘스트가 생성되었습니다."
-            );
-        }
-
-        TodayQuestDto newQuestDto = createNewDailyQuest();
-
-        return new TodayQuestGenerateResponseDto(
-                newQuestDto,
-                "오늘의 퀘스트가 성공적으로 생성되었습니다."
-        );
-    }
-
-    private TodayQuestDto createNewDailyQuest() {
+    private TodayQuests createNewDailyQuest() {
         Random random = new Random();
 
         // 랜덤 동 선택
@@ -104,25 +77,18 @@ public class TodayQuestService {
         // 랜덤 포인트 선택
         Integer bonusPoint = BONUS_POINTS.get(random.nextInt(BONUS_POINTS.size()));
 
-        // 템플릿으로 퀘스트 내용 조합
-        String questContent = String.format(
-                QUEST_TEMPLATE,
-                randomDong.getDongName(),
-                randomCategory.getCategoryName(),
-                bonusPoint
-        );
+        // 퀘스트 내용 조합
+        String questContent = String.format(QUEST_TEMPLATE, randomDong.getDongName(), randomCategory.getCategoryName(), bonusPoint);
 
         // TodayQuest 엔티티 생성
         TodayQuests newQuest = TodayQuests.builder()
                 .todayContent(questContent)
                 .todayPoint(bonusPoint)
                 .dongs(randomDong)
-                .categories(randomCategory)
+                .categories(randomCategory) // 카테고리 저장
                 .build();
 
-        todayQuestRepository.save(newQuest);
-
-        return TodayQuestDto.from(newQuest);
+        return todayQuestRepository.save(newQuest);
     }
 
     // 오늘의 퀘스트 인증
