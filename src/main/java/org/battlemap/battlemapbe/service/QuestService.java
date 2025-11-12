@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -28,7 +29,6 @@ public class QuestService {
     private final UserRepository userRepository;
     private final UserQuestsRepository userQuestsRepository;
     private final UserLeagueRepository userLeagueRepository;
-    private final QuestsRepository questRepository;
 
     // 퀘스트 템플릿
     private static final List<String> QUEST_TEMPLATES = List.of(
@@ -54,6 +54,9 @@ public class QuestService {
 
     // 퀘스트 리워드 포인트 템플릿
     private static final List<Integer> REWARD_POINTS = List.of(50, 100, 150, 200);
+
+    // 퀘스트 개수 상수 정의
+    private static final int QUEST_COUNT_TO_GENERATE = 4;
 
     // 퀘스트 목록 조회
     public List<QuestWithStoreDto> getQuestsByStoreId(String loginId, Long storeId) {
@@ -151,10 +154,19 @@ public class QuestService {
 
         List<QuestDetailDto> questDetails = new ArrayList<>();
 
-        // 4개의 퀘스트 생성 (i = 0부터 3)
-        for (int i = 0; i < 4; i++) {
-            // ... (랜덤 퀘스트 로직은 동일)
-            int templateIndex = random.nextInt(QUEST_TEMPLATES.size());
+        // 템플릿 인덱스 리스트 생성 (0~6)
+        List<Integer> templateIndices = new ArrayList<>();
+        for (int i = 0; i < QUEST_TEMPLATES.size(); i++) {
+            templateIndices.add(i);
+        }
+
+        // 인덱스 리스트를 랜덤하게 섞음
+        Collections.shuffle(templateIndices);
+
+        // 섞인 리스트에서 4개만 선택하여 퀘스트 생성
+        for (int i = 0; i < QUEST_COUNT_TO_GENERATE; i++) {
+            int templateIndex = templateIndices.get(i);
+
             String template = QUEST_TEMPLATES.get(templateIndex);
             String questContent;
 
@@ -167,16 +179,16 @@ public class QuestService {
             String answer = QUEST_ANSWERS.get(templateIndex);
             Integer rewardPoint = REWARD_POINTS.get(random.nextInt(REWARD_POINTS.size()));
 
-            // Quests 생성 및 저장 (DB ID 할당됨)
+            // Quests 생성 및 저장
             Quests quest = Quests.builder()
-                    .questNumber(i + 1)
+                    .questNumber(i + 1) // 퀘스트 번호는 1, 2, 3, 4
                     .questContent(questContent)
                     .answer(answer)
                     .rewardPoint(rewardPoint)
                     .stores(store)
                     .build();
 
-            questRepository.save(quest);
+            questsRepository.save(quest);
 
             // 사용자와 퀘스트 연결 (UserQuests 생성)
             UserQuests userQuest = UserQuests.builder()
