@@ -23,4 +23,11 @@ public class UserQuestController {
         Map<String, Object> result = userQuestService.getQuestCountByLoginId(loginId);
         return ResponseEntity.ok(ApiResponse.success(result, 200));
     }
+    // 완료된 퀘스트 수 조회
+    @GetMapping("/complete")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getCompletedQuestCount(Authentication authentication) {
+        String loginId = authentication.getName();
+        Map<String, Object> result = userQuestService.getCompletedQuestCountByLoginId(loginId);
+        return ResponseEntity.ok(ApiResponse.success(result, 200));
+    }
 }

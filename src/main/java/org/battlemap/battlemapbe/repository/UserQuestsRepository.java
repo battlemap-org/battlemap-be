@@ -18,7 +18,8 @@ public interface UserQuestsRepository extends JpaRepository<UserQuests, Long> {
 
     // 사용자 기반 퀘스트 수 조회 (마이페이지)
     long countByUsers(Users user);
-
+    //  완료한 퀘스트 수 조회
+    long countByUsersAndIsCompletedTrue(Users user);
     // 오늘의 퀘스트 조회 (인증용)
     Optional<UserQuests> findByUsersAndTodayQuests(Users users, TodayQuests todayQuests);
 

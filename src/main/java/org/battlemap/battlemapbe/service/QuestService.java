@@ -124,6 +124,10 @@ public class QuestService {
         // 답변 및 완료 여부 업데이트
         userQuest.setUserAnswer(userAnswerContent);
         userQuest.setIsCompleted(isCorrect);
+        //정답일 경우 완료시간 추가
+        if (isCorrect) {
+            userQuest.setCompletedAt(java.time.LocalDateTime.now());
+        }
         userQuestsRepository.save(userQuest);
 
         // 정답일 경우 포인트 지급
