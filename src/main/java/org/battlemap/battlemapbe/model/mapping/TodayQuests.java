@@ -32,6 +32,10 @@ public class TodayQuests extends BaseEntity {
     @JoinColumn(name = "dong_id", nullable = false)
     private Dongs dongs; // dongs
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Categories categories; // categories
+
     @OneToMany(mappedBy = "todayQuests", cascade = CascadeType.ALL)
     @Builder.Default
     private List<UserQuests> userQuestsList = new ArrayList<>(); // userquests

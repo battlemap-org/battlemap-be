@@ -1,16 +1,14 @@
 package org.battlemap.battlemapbe.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.battlemap.battlemapbe.dto.Quests.TodayQuestAnswerResponseDto;
 import org.battlemap.battlemapbe.dto.Quests.TodayQuestDto;
 import org.battlemap.battlemapbe.dto.Quests.TodayQuestGenerateResponseDto;
 import org.battlemap.battlemapbe.model.response.ApiResponse;
 import org.battlemap.battlemapbe.service.TodayQuestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping; // POST import 추가
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/quests")
@@ -36,6 +34,21 @@ public class TodayQuestController {
     public ResponseEntity<ApiResponse<TodayQuestGenerateResponseDto>> generateTodayQuest() {
         // 인증 필요 없음. (서버 내부 로직)
         TodayQuestGenerateResponseDto response = todayQuestService.generateDailyQuestIfNoneExists();
+        return ResponseEntity.ok(ApiResponse.success(response, 200));
+    }
+
+    // 오늘의 퀘스트 인증
+    @PostMapping("/{todayQuestId}/answers-today")
+    public ResponseEntity<ApiResponse<TodayQuestAnswerResponseDto>> completeTodayQuest(
+            Authentication authentication,
+            @PathVariable("todayQuestId") Long todayQuestId
+    ) {
+        String loginId = authentication.getName();
+
+        TodayQuestAnswerResponseDto response = todayQuestService.completeTodayQuest(
+                loginId,
+                todayQuestId
+        );
         return ResponseEntity.ok(ApiResponse.success(response, 200));
     }
 }

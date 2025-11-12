@@ -1,5 +1,10 @@
 package org.battlemap.battlemapbe.service;
 
+import org.battlemap.battlemapbe.dto.Quests.TodayQuestAnswerResponseDto;
+import org.battlemap.battlemapbe.model.Users;
+import org.battlemap.battlemapbe.model.mapping.UserLeagues;
+import org.battlemap.battlemapbe.model.mapping.UserQuests;
+import org.battlemap.battlemapbe.repository.*;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.battlemap.battlemapbe.dto.Quests.TodayQuestDto;
@@ -8,10 +13,6 @@ import org.battlemap.battlemapbe.model.Dongs;
 import org.battlemap.battlemapbe.model.exception.CustomException;
 import org.battlemap.battlemapbe.model.mapping.Categories;
 import org.battlemap.battlemapbe.model.mapping.TodayQuests;
-import org.battlemap.battlemapbe.repository.CategoryRepository;
-import org.battlemap.battlemapbe.repository.DongsRepository;
-import org.battlemap.battlemapbe.repository.TodayQuestRepository;
-import org.battlemap.battlemapbe.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -30,12 +31,11 @@ public class TodayQuestService {
     private final TodayQuestRepository todayQuestRepository;
     private final CategoryRepository categoryRepository;
     private final DongsRepository dongsRepository;
+    private final UserQuestsRepository userQuestsRepository;
+    private final UserLeagueRepository userLeagueRepository;
 
     // 오늘의 퀘스트 템플릿
-    private static final List<String> QUEST_TEMPLATES = List.of(
-            "%s 방문 인증 시 보너스 %d 포인트 지급!",
-            "%s 카테고리 방문 인증 시 보너스 %d 포인트 지급!"
-    );
+    private static final String QUEST_TEMPLATE = "%s에서 %s 방문 인증 시 보너스 %d 포인트 지급!";
 
     // 리워드 포인트 템플릿
     private static final List<Integer> BONUS_POINTS = List.of(30, 50, 70, 100);
@@ -94,31 +94,94 @@ public class TodayQuestService {
         }
         Dongs randomDong = dongs.get(random.nextInt(dongs.size()));
 
-        int templateIndex = random.nextInt(QUEST_TEMPLATES.size());
+        // 랜덤 카테고리 선택
+        List<Categories> categories = categoryRepository.findAll();
+        if (categories.isEmpty()) {
+            throw new CustomException("CATEGORY_NOT_FOUND", "유효한 카테고리가 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        Categories randomCategory = categories.get(random.nextInt(categories.size()));
+
+        // 랜덤 포인트 선택
         Integer bonusPoint = BONUS_POINTS.get(random.nextInt(BONUS_POINTS.size()));
 
-        String questContent;
+        // 템플릿으로 퀘스트 내용 조합
+        String questContent = String.format(
+                QUEST_TEMPLATE,
+                randomDong.getDongName(),
+                randomCategory.getCategoryName(),
+                bonusPoint
+        );
 
-        if (templateIndex == 0) {
-            questContent = String.format(QUEST_TEMPLATES.get(0), randomDong.getDongName(), bonusPoint);
-        } else {
-            List<Categories> categories = categoryRepository.findAll();
-            if (categories.isEmpty()) {
-                throw new CustomException("CATEGORY_NOT_FOUND", "유효한 카테고리가 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            Categories randomCategory = categories.get(random.nextInt(categories.size()));
-
-            questContent = String.format(QUEST_TEMPLATES.get(1), randomCategory.getCategoryName(), bonusPoint);
-        }
-
+        // TodayQuest 엔티티 생성
         TodayQuests newQuest = TodayQuests.builder()
                 .todayContent(questContent)
                 .todayPoint(bonusPoint)
                 .dongs(randomDong)
+                .categories(randomCategory)
                 .build();
 
         todayQuestRepository.save(newQuest);
 
         return TodayQuestDto.from(newQuest);
+    }
+
+    // 오늘의 퀘스트 인증
+    @Transactional
+    public TodayQuestAnswerResponseDto completeTodayQuest(String loginId, Long todayQuestId) {
+
+        // 사용자 및 오늘의 퀘스트 검증
+        Users user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        TodayQuests todayQuest = todayQuestRepository.findById(todayQuestId)
+                .orElseThrow(() -> new CustomException("QUEST_404", "오늘의 퀘스트를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        // 이미 이 오늘의 퀘스트를 완료했는지 확인
+        Optional<UserQuests> existingUserTodayQuest = userQuestsRepository.findByUsersAndTodayQuests(user, todayQuest);
+
+        if (existingUserTodayQuest.isPresent() && Boolean.TRUE.equals(existingUserTodayQuest.get().getIsCompleted())) {
+            throw new CustomException("QUEST_ALREADY_COMPLETED", "이미 완료한 퀘스트입니다.", HttpStatus.BAD_REQUEST);
         }
+
+        // 인증 로직: 오늘 완료한 '가게 퀘스트'가 조건에 맞는지 확인
+        LocalDateTime startOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        LocalDateTime endOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
+
+        boolean isCriteriaMet = userQuestsRepository.hasCompletedStoreQuestMatchingCriteria(
+                user,
+                todayQuest.getDongs(),      // 오늘의 퀘스트가 요구하는 '동'
+                todayQuest.getCategories(), // 오늘의 퀘스트가 요구하는 '카테고리'
+                startOfDay,
+                endOfDay
+        );
+
+        // 인증 실패 처리
+        if (!isCriteriaMet) {
+            return new TodayQuestAnswerResponseDto(false, 0, "인증 실패: 오늘 완료한 오늘의 퀘스트에 해당하는 가게 퀘스트가 없습니다.");
+        }
+
+        // 인증 성공: '오늘의 퀘스트'를 완료 처리
+        int reward = todayQuest.getTodayPoint();
+
+        // UserQuests 기록 생성 또는 업데이트 (오늘의 퀘스트에 대해)
+        UserQuests userQuestLog = existingUserTodayQuest.orElse(UserQuests.builder()
+                .users(user)
+                .todayQuests(todayQuest)
+                .isCompleted(false)
+                .userAnswer("인증 완료")
+                .build());
+
+        userQuestLog.setIsCompleted(true);
+        userQuestLog.setCompletedAt(LocalDateTime.now()); // 완료 시각 기록
+        userQuestsRepository.save(userQuestLog);
+
+        // 리그 포인트 추가
+        UserLeagues userLeague = userLeagueRepository.findByUsers(user)
+                .orElseThrow(() -> new CustomException("LEAGUE_NOT_FOUND", "해당 사용자의 리그 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        userLeague.setLeaguePoint(userLeague.getLeaguePoint() + reward);
+        userLeagueRepository.save(userLeague);
+
+        return new TodayQuestAnswerResponseDto(true, reward, "인증 성공!");
+    }
 }
