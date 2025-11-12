@@ -1,4 +1,4 @@
-package org.battlemap.battlemapbe.response;
+package org.battlemap.battlemapbe.dto;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -6,15 +6,15 @@ import org.battlemap.battlemapbe.model.Dongs;
 
 @Getter
 @Builder
-public class DongResponse {
+public class DongResponseDto {
 
     private Long dongId;
     private String dongName;
     private Double latitude;
     private Double longitude;
 
-    public static DongResponse from(Dongs d) {
-        return DongResponse.builder()
+    public static DongResponseDto from(Dongs d) {
+        return DongResponseDto.builder()
                 .dongId(d.getDongId())
                 .dongName(d.getDongName())
                 .latitude(d.getLatitude())

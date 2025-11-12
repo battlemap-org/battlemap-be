@@ -28,7 +28,7 @@ public class UserQuests {
     private String userAnswer; // 사용자가 제출한 답변
 
     @Column(name = "completed_at")
-    private LocalDateTime completedAt; // ✅ 완료 시각
+    private LocalDateTime completedAt; // 완료 시각
 
     // 매핑
     @ManyToOne(fetch = FetchType.LAZY)
