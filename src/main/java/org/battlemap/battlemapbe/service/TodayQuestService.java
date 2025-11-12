@@ -43,7 +43,7 @@ public class TodayQuestService {
     @Transactional
     public TodayQuestDto getOrCreateDailyQuest(String loginId) {
         // 사용자 검증
-        userRepository.findByLoginId(loginId)
+        Users user= userRepository.findByLoginId(loginId)
                 .orElseThrow(() ->
                         new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
@@ -53,6 +53,17 @@ public class TodayQuestService {
 
         TodayQuests todayQuest = todayQuestRepository.findFirstByCreatedAtBetween(startOfDay, endOfDay)
                 .orElseGet(this::createNewDailyQuest); // 퀘스트가 없으면 createNewDailyQuest 호출
+
+        Optional<UserQuests> existing = userQuestsRepository.findByUsersAndTodayQuests(user, todayQuest);
+        if (existing.isEmpty()) {
+            UserQuests userQuest = UserQuests.builder()
+                    .users(user)
+                    .todayQuests(todayQuest)
+                    .isCompleted(false)
+                    .userAnswer("") // 기본값
+                    .build();
+            userQuestsRepository.save(userQuest);
+        }
 
         return TodayQuestDto.from(todayQuest);
     }

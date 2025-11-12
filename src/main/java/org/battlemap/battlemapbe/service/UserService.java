@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors; // List 작업용 import 추가
 
+import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -135,6 +136,26 @@ public class UserService {
                 .build();
     }
 
+    // 토큰 기반 사용자 이름 조회 (Map 반환)
+    public Map<String, Object> getUserNameByToken(String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new CustomException("TOKEN_400", "토큰 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        String accessToken = token.substring(7);
+        String loginId;
+
+        try {
+            loginId = jwtTokenProvider.validateAndGetUserId(accessToken);
+        } catch (RuntimeException e) {
+            throw new CustomException("TOKEN_401", "유효하지 않거나 만료된 토큰입니다.", HttpStatus.UNAUTHORIZED);
+        }
+
+        Users user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "존재하지 않는 사용자입니다.", HttpStatus.NOT_FOUND));
+
+        return Map.of("userName", user.getName());
+    }
     // 보유 포인트 조회
     public int getUserPoints(String loginId) {
         Users user = userRepository.findByLoginId(loginId)
