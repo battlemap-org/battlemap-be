@@ -42,8 +42,10 @@ public class TodayQuestService {
     // 오늘의 퀘스트 조회 (없으면 생성(
     @Transactional
     public TodayQuestDto getOrCreateDailyQuest(String loginId) {
+
         // 사용자 검증
-        userRepository.findByLoginId(loginId)
+        //  user 변수를 선언해야 함
+        Users user = userRepository.findByLoginId(loginId)
                 .orElseThrow(() ->
                         new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
@@ -53,7 +55,17 @@ public class TodayQuestService {
 
         TodayQuests todayQuest = todayQuestRepository.findFirstByCreatedAtBetween(startOfDay, endOfDay)
                 .orElseGet(this::createNewDailyQuest); // 퀘스트가 없으면 createNewDailyQuest 호출
-
+        // 추가 부분 — 오늘의 퀘스트 row 없으면 유저퀘스트로 자동 추가
+        userQuestsRepository.findByUsersAndTodayQuests(user, todayQuest)
+                .orElseGet(() -> {
+                    UserQuests newUserQuest = UserQuests.builder()
+                            .users(user)
+                            .todayQuests(todayQuest)
+                            .isCompleted(false)
+                            .userAnswer(null)
+                            .build();
+                    return userQuestsRepository.save(newUserQuest);
+                });
         return TodayQuestDto.from(todayQuest);
     }
 
