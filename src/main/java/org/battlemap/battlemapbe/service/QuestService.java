@@ -1,7 +1,8 @@
 package org.battlemap.battlemapbe.service;
 
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.*;
 import org.battlemap.battlemapbe.dto.Quests.*;
 import org.battlemap.battlemapbe.model.Quests;
 import org.battlemap.battlemapbe.model.Stores;
@@ -12,12 +13,17 @@ import org.battlemap.battlemapbe.model.mapping.UserQuests;
 import org.battlemap.battlemapbe.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+
+import java.util.Base64;
+
+import java.util.*;
 import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +36,14 @@ public class QuestService {
     private final UserQuestsRepository userQuestsRepository;
     private final UserLeagueRepository userLeagueRepository;
     private final LeagueService leagueService;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    @Value("${gemini.api.key}")
+    private String geminiApiKey;
+
+    @Value("${gemini.api.url}")
+    private String geminiApiUrl;
 
     // 퀘스트 템플릿
     private static final List<String> QUEST_TEMPLATES = List.of(
@@ -60,6 +74,7 @@ public class QuestService {
     private static final int QUEST_COUNT_TO_GENERATE = 4;
 
     // 퀘스트 목록 조회
+    @Transactional(readOnly = true)
     public List<QuestWithStoreDto> getQuestsByStoreId(String loginId, Long storeId) {
         // 사용자 검증
         userRepository.findByLoginId(loginId)
@@ -80,6 +95,7 @@ public class QuestService {
     }
 
     // 퀘스트 풀이 화면 조회
+    @Transactional(readOnly = true)
     public QuestDto getQuestsByQuestId(String loginId, Long questId) {
         // 사용자 검증
         userRepository.findByLoginId(loginId)
@@ -94,7 +110,8 @@ public class QuestService {
         return QuestDto.from(quest);
     }
 
-    // 퀘스트 답변 제출
+    // 퀘스트 답변 제출 (텍스트)
+    @Transactional
     public QuestAnswerResponseDto QuestAnswer(Long questId, String loginId, String userAnswerContent) {
         // 사용자 검증
         Users user = userRepository.findByLoginId(loginId)
@@ -155,11 +172,165 @@ public class QuestService {
             userLeagueRepository.save(userLeague);
         }
 
-        // 응답 DTO 반환
-        return QuestAnswerResponseDto.from(isCorrect, reward);
+        return QuestAnswerResponseDto.from(isCorrect, reward, userAnswerContent);
+    }
+
+    // 퀘스트 답변 제출 (이미지)
+    @Transactional
+    public QuestAnswerResponseDto completeImageQuest(String loginId, Long questId, String imageUrl) {
+        // 사용자 및 퀘스트 검증
+        Users user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new CustomException("USER_NOT_FOUND", "해당 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        Quests quest = questsRepository.findById(questId)
+                .orElseThrow(() -> new CustomException("QUEST_404", "해당 퀘스트를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        // 퀘스트 타입 검증 ("인증 필요" 퀘스트여야 함)
+        if (!quest.getAnswer().equals("인증 필요")) {
+            throw new CustomException("INVALID_QUEST_TYPE", "이 퀘스트는 이미지 인증 퀘스트가 아닙니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        // 이미 완료했는지 검증
+        UserQuests userQuest = userQuestsRepository.findByUsersAndQuests(user, quest)
+                .orElse(UserQuests.builder()
+                        .users(user)
+                        .quests(quest)
+                        .isCompleted(false)
+                        .build());
+
+        if (Boolean.TRUE.equals(userQuest.getIsCompleted())) {
+            throw new CustomException("QUEST_ALREADY_COMPLETED", "이미 완료한 퀘스트입니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        // AI 이미지 검증
+        String storeName = quest.getStores().getStoreName();
+
+        // Gemini API 프롬프트 생성
+        String prompt = "Extract all visible text from the main sign in this image. Respond with only the extracted text.";
+
+        // emini API 호출 (URL -> Base64 변환)
+        boolean isCorrect = callGeminiVisionApiFromUrl(prompt, imageUrl, storeName);
+        int reward = isCorrect ? quest.getRewardPoint() : 0;
+
+        String authMessage = isCorrect ? "AI 인증 완료" : "AI 인증 실패";
+
+        // UserQuests 기록 업데이트
+        userQuest.setUserAnswer(imageUrl); // userAnswer에 이미지 URL 저장
+        userQuest.setIsCompleted(isCorrect);
+        if (isCorrect) {
+            userQuest.setCompletedAt(java.time.LocalDateTime.now());
+        }
+        userQuestsRepository.save(userQuest);
+
+        // 포인트 지급 (성공 시)
+        if (isCorrect) {
+            var currentLeague = leagueService.getCurrentLeagueOrThrow();
+            UserLeagues userLeague = userLeagueRepository.findByUsersAndLeagues(user, currentLeague)
+                    .orElseGet(() -> {
+                        UserLeagues newUserLeague = UserLeagues.builder()
+                                .users(user)
+                                .leagues(currentLeague)
+                                .leaguePoint(0)
+                                .userRank(0)
+                                .build();
+                        return userLeagueRepository.save(newUserLeague);
+                    });
+
+            userLeague.setLeaguePoint(userLeague.getLeaguePoint() + reward);
+            userLeagueRepository.save(userLeague);
+        }
+
+        return QuestAnswerResponseDto.from(isCorrect, reward, authMessage);
+    }
+
+    //Gemini Vision API 호출 (URL 다운로드 후 Base64로 변환)
+    private boolean callGeminiVisionApiFromUrl(String prompt, String imageUrl, String storeName) {
+
+        // URL에서 이미지 다운로드
+        byte[] imageBytes;
+        String mimeType;
+
+        try {
+            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(imageUrl, HttpMethod.GET, null, byte[].class);
+
+            if (!responseEntity.hasBody() || responseEntity.getBody() == null) {
+                throw new CustomException("IMAGE_DOWNLOAD_FAILED", "이미지 URL에서 빈 파일을 다운로드했습니다.", HttpStatus.BAD_REQUEST);
+            }
+
+            imageBytes = responseEntity.getBody();
+
+            // Content-Type 헤더에서 실제 MimeType 추출
+            MediaType mediaType = responseEntity.getHeaders().getContentType();
+            if (mediaType != null) {
+                mimeType = mediaType.toString();
+            } else {
+                // 헤더가 없는 경우, 기본값(jpeg)으로 설정 (실패 가능성 있음)
+                mimeType = "image/jpeg";
+            }
+
+        } catch (Exception e) {
+            System.err.println("이미지 다운로드 실패 (URL: " + imageUrl + "): " + e.getMessage());
+            return false;
+        }
+
+        // Base64 인코딩
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+        // Gemini API 요청 (inline_data 사용)
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        // API 요청 Body 생성 (동적 MimeType 사용)
+        GeminiPart textPart = new GeminiPart(prompt);
+        // 'mimeType' 변수 사용
+        GeminiPart imagePart = new GeminiPart(new GeminiInlineData(mimeType, base64Image));
+        GeminiContent content = new GeminiContent("user", List.of(textPart, imagePart));
+        GeminiRequest payload = new GeminiRequest(List.of(content));
+
+        HttpEntity<GeminiRequest> entity = new HttpEntity<>(payload, headers);
+
+        try {
+            String apiUrl = geminiApiUrl + geminiApiKey;
+
+            ResponseEntity<GeminiResponse> response = restTemplate.exchange(
+                    apiUrl,
+                    HttpMethod.POST,
+                    entity,
+                    GeminiResponse.class
+            );
+
+            // 응답 파싱 (기존과 동일)
+            if (response.getBody() != null &&
+                    response.getBody().getCandidates() != null &&
+                    !response.getBody().getCandidates().isEmpty() &&
+                    response.getBody().getCandidates().get(0).getContent() != null &&
+                    !response.getBody().getCandidates().get(0).getContent().getParts().isEmpty()) {
+
+                String aiResponse = response.getBody().getCandidates().get(0).getContent().getParts().get(0).getText();
+                if (aiResponse == null) return false;
+
+                String aiText = aiResponse.replaceAll("\\s+", "");
+                String storeNameText = storeName.replaceAll("\\s+", "");
+
+                // AI 디버깅 로그
+                System.out.println("===== AI Debug Log =====");
+                System.out.println("Store Name: " + storeNameText);
+                System.out.println("AI Response: " + aiText);
+                System.out.println("Contains Check: " + aiText.contains(storeNameText));
+
+                return aiText.contains(storeNameText);
+            }
+            return false;
+
+        } catch (Exception e) {
+            System.err.println("Gemini API 호출 실패: " + e.getMessage());
+            return false;
+        }
     }
 
     // 가게별 퀘스트 생성 (4개)
+    @Transactional
     public StoreQuestResponseDto createRandomQuestForStore(String loginId, Long storeId) {
         // 사용자 검증
         Users user = userRepository.findByLoginId(loginId)
@@ -227,9 +398,70 @@ public class QuestService {
         }
 
         return new StoreQuestResponseDto(
+                store.getStoreId(),
                 store.getStoreName(),
                 questDetails,
                 "4개의 퀘스트가 성공적으로 생성되었습니다!"
         );
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GeminiRequest {
+        private List<GeminiContent> contents;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GeminiContent {
+        private String role;
+        private List<GeminiPart> parts;
+    }
+
+    // GeminiInlineData (Base64)
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GeminiInlineData {
+        @JsonProperty("mime_type")
+        private String mimeType;
+        @JsonProperty("data")
+        private String data;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GeminiPart {
+        private String text;
+
+        // inlineData
+        @JsonProperty("inline_data")
+        private GeminiInlineData inlineData;
+
+        // 텍스트용 생성자
+        public GeminiPart(String text) {
+            this.text = text;
+        }
+
+        // 이미지 Base64용 생성자
+        public GeminiPart(GeminiInlineData inlineData) {
+            this.inlineData = inlineData;
+        }
+    }
+
+    // Gemini 응답 DTO
+    @Data
+    @NoArgsConstructor
+    public static class GeminiResponse {
+        private List<GeminiCandidate> candidates;
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class GeminiCandidate {
+        private GeminiContent content;
     }
 }

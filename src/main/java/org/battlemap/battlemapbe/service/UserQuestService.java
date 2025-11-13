@@ -16,7 +16,7 @@ public class UserQuestService {
     private final UserRepository userRepository;
     private final UserQuestsRepository userQuestsRepository;
 
-    // 🔹 전체 퀘스트 수 조회
+    // 전체 퀘스트 수 조회
     @Transactional(readOnly = true)
     public Map<String, Object> getQuestCountByLoginId(String loginId) {
         Users user = userRepository.findByLoginId(loginId)
@@ -26,7 +26,7 @@ public class UserQuestService {
         return Map.of("totalCount", totalCount);
     }
 
-    // 🔹 완료된 퀘스트 수 조회
+    // 완료된 퀘스트 수 조회
     @Transactional(readOnly = true)
     public Map<String, Object> getCompletedQuestCountByLoginId(String loginId) {
         Users user = userRepository.findByLoginId(loginId)

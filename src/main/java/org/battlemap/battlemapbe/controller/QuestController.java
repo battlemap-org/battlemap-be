@@ -62,6 +62,24 @@ public class QuestController {
         return ResponseEntity.ok(ApiResponse.success(response, 200));
     }
 
+    // 퀘스트 답변 (이미지 인증)
+    @PostMapping("/{questId}/answers-images")
+    public ResponseEntity<ApiResponse<QuestAnswerResponseDto>> authenticateImage(
+            Authentication authentication,
+            @PathVariable("questId") Long questId,
+            @RequestBody QuestImageRequestDto request
+    ) {
+        String loginId = authentication.getName();
+
+        QuestAnswerResponseDto response = questService.completeImageQuest(
+                loginId,
+                questId,
+                request.getImageUrl()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(response, 200));
+    }
+
 
     // 가게별 퀘스트 생성
     @PostMapping("/{storeId}/stores")
