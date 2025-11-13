@@ -57,6 +57,7 @@ public class StoreQuestService {
             if (questsExist) {
                 // 이미 퀘스트가 생성된 경우, 재 생성하지 않고 빈 퀘스트 리스트와 함께 이미 생성되었음을 알리는 메시지 반환
                 return new StoreQuestResponseDto(
+                        existingStore.getStoreId(),
                         existingStore.getStoreName(),
                         new ArrayList<>(),
                         "이미 이 가게에 대한 퀘스트가 생성되었으므로, 기존 퀘스트를 플레이해주세요."

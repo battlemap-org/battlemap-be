@@ -12,11 +12,13 @@ import lombok.NoArgsConstructor;
 public class QuestAnswerResponseDto {
     private boolean isCorrect;
     private Integer rewardPoint;
+    private String userAnswer;
 
-    public static QuestAnswerResponseDto from(boolean isCorrect, Integer earnedPoint) {
+    public static QuestAnswerResponseDto from(boolean isCorrect, Integer earnedPoint, String userAnswer) {
         return QuestAnswerResponseDto.builder()
                 .isCorrect(isCorrect)
                 .rewardPoint(earnedPoint)
+                .userAnswer(userAnswer)
                 .build();
     }
 }
