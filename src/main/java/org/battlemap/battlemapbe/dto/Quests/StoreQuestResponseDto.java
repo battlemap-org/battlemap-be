@@ -8,6 +8,7 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 public class StoreQuestResponseDto {
+    private Long storeId;
     private String storeName;
     private List<QuestDetailDto> quests;
     private String message;
