@@ -10,6 +10,7 @@ public class QuestDto {
     private final Long questId;
     private final Integer questNumber;
     private final String questContent;
+    private final String questAnswer;
 
     // quest 풀이 화면 dto
     public static QuestDto from(Quests quest) {
@@ -17,6 +18,7 @@ public class QuestDto {
                 .questId(quest.getQuestId())
                 .questNumber(quest.getQuestNumber())
                 .questContent(quest.getQuestContent())
+                .questAnswer(quest.getAnswer())
                 .build();
     }
 }
