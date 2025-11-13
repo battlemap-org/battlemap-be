@@ -34,6 +34,10 @@ public class Users extends BaseEntity {
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email;
 
+    // 추가된 필드: 사용자 고유 색상 코드 (예: #FF00FF)
+    @Column(name = "user_color_code", length = 7, nullable = true) // 마이그레이션 위해 nullable=true 설정
+    private String userColorCode;
+
     @Column(name = "token", length = 512)
     private String token;
 

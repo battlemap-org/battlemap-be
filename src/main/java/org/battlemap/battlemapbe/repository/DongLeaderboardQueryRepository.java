@@ -26,14 +26,15 @@ public class DongLeaderboardQueryRepository {
         String jpql =
                 "SELECT new org.battlemap.battlemapbe.dto.league.DongLeaderboardResponse$Player(" +
                         "       uq.users.name, " +
-                        "       SUM(q.rewardPoint)" +
+                        "       SUM(q.rewardPoint), " +
+                        "       NULL" + // 💡 userColorCode 필드에 대한 임시 값
                         ") " +
                         "FROM UserQuests uq " +
                         "JOIN uq.quests q " +
                         "JOIN q.stores s " +
                         "WHERE uq.isCompleted = true " +
                         "  AND s.dongs.dongName = :dongName " +
-                        "  AND uq.completedAt BETWEEN :start AND :end " +  // ✅ 시즌 기간 내만 집계
+                        "  AND uq.completedAt BETWEEN :start AND :end " +
                         "GROUP BY uq.users.name " +
                         "ORDER BY SUM(q.rewardPoint) DESC";
 

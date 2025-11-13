@@ -13,4 +13,7 @@ public class LoginResponse {
     private String name;
     private String email;
     private String token;
+
+    // 🌟 추가: 사용자 고유 색상 코드 🌟
+    private String userColorCode;
 }

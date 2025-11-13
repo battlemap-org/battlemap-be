@@ -28,6 +28,7 @@ public class DongLeaderboardResponse {
     public static class Player {
         private String name;   // Users.name
         private Long point;    // 해당 동 누적 포인트
+        private String userColorCode; // 리더보드 목록의 사용자 색상
     }
 
     @Getter
@@ -37,5 +38,6 @@ public class DongLeaderboardResponse {
         private int rank;      // 0이면 랭킹 없음
         private String name;
         private Long point;    // null 또는 0이면 점수 없음
+        private String userColorCode; // 본인 색상
     }
 }

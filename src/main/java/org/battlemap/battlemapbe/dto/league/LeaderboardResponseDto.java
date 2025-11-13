@@ -13,5 +13,5 @@ public class LeaderboardResponseDto {
     private int rank;
     private String nickname;
     private int totalPoints;
-
+    private String userColorCode;
 }
