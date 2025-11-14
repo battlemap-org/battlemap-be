@@ -39,7 +39,7 @@ public class LeagueController {
         return ResponseEntity.ok(ApiResponse.success(response, 200));
     }
 
-    // 시 단위 리그 리더보드 조회 (시즌 포인트 포함)
+    // 시 단위 리그 리더보드 조회
     @GetMapping("/{cityName}/leaderboard")
     public ResponseEntity<ApiResponse<LeagueService.LeagueResponse>> getLeaderboardByCity(
             Authentication authentication,

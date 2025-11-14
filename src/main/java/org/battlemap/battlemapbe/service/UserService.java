@@ -27,7 +27,6 @@ public class UserService {
 
     // 색상 풀(Color Pool) 정의
     private static final List<String> COLOR_POOL = List.of(
-// 기본 원색 및 고채도 색상 (Vivid & Primary)
             "#FF0000", // 빨강
             "#008000", // 초록
             "#0000FF", // 파랑
@@ -46,7 +45,6 @@ public class UserService {
             "#FF1493", // 딥 핑크
             "#7CFC00", // 라임 그린
 
-            // 명도가 다른 중간 색상
             "#808000", // 올리브
             "#4682B4", // 스틸 블루
             "#9932CC", // 다크 오키드

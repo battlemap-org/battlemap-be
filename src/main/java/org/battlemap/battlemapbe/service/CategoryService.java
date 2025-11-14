@@ -14,7 +14,6 @@ public class CategoryService {
     private final CategoriesRepository categoriesRepository;
 
     public List<Map<String, String>> getCategoriesByDong(String cityName, String dongName) {
-        // 지금은 cityName/dongName 안 쓰지만, 나중에 필터링 로직 넣을 수 있음
         return categoriesRepository.findAll().stream()
                 .map(c -> Map.of(
                         "name", c.getCategoryName(),

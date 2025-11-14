@@ -25,7 +25,7 @@ public class Coupons extends BaseEntity {
 
     private String brand;      // CU, 메가 등
     private String name;       // "cu 5000원"
-    private int amount;    // 5000
+    private int amount;        // 5000
     private String status;     // OWNED / USED
     private String code;       // 쿠폰 코드
     private LocalDateTime createdAt;

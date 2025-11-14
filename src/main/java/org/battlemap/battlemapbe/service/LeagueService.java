@@ -28,8 +28,7 @@ public class LeagueService {
     private final UserRepository userRepository;
     private final LeaguesRepository leaguesRepository;
 
-
-    // 수정된 메서드: 현재 진행 중인 리그 조회 (QuestService에서 사용)
+    // 현재 진행 중인 리그 조회
     // 리그가 없으면 자동으로 새 시즌을 생성하도록 수정
     public Leagues getCurrentLeagueOrThrow() {
         LocalDateTime now = LocalDateTime.now();
@@ -39,13 +38,13 @@ public class LeagueService {
                 .orElseGet(() -> {
                     // QuestService는 cityName 정보를 직접 전달받지 않으므로,
                     // createNextMonthlyLeague 메서드가 동작할 수 있도록 "부천시"를 기본값으로 사용
-                    System.out.println("⚠️ League not found. Creating a new monthly league for Bucheon-si.");
+                    System.out.println("League not found. Creating a new monthly league for Bucheon-si.");
                     return createNextMonthlyLeague(now, "부천시");
                 });
     }
 
 
-    // 🔹 이번 시즌 리더보드 조회
+    // 이번 시즌 리더보드 조회
     public LeagueResponse getMonthlyLeaderboard(String loginId, String cityName) {
 
         // 로그인 유저 확인
@@ -73,9 +72,9 @@ public class LeagueService {
             Users u = ul.getUsers();
             int leaguePoint = ul.getLeaguePoint();
 
-            // 0점은 리더보드에 안 보이게 (너 요구사항)
+            // 0점은 리더보드에 안 보이게
             if (leaguePoint <= 0) {
-                // 그래도 내 거면 mySeasonPoint 는 0으로 유지
+                // mySeasonPoint 는 0으로 유지
                 if (u.getUserId().equals(me.getUserId())) {
                     mySeasonPoint = 0;
                 }
@@ -104,7 +103,7 @@ public class LeagueService {
         return new LeagueResponse(leaderboard, myRank, myNickname, mySeasonPoint, myUserColorCode, remainingTime);
     }
 
-    // 🔹 endDate 지난 시즌들 정산 (스케줄러 / 수동에서 호출)
+    // endDate 지난 시즌들 정산 (스케줄러 / 수동에서 호출)
     public void settleExpiredLeagues() {
         LocalDateTime now = LocalDateTime.now();
         var expiredLeagues = leaguesRepository.findExpiredUnsettledLeagues(now);
@@ -116,7 +115,7 @@ public class LeagueService {
         }
     }
 
-    // 🔹 시즌 정산 로직 (리그 포인트 이월 + 보너스)
+    // 시즌 정산 로직 (리그 포인트 이월 + 보너스)
     private void applySeasonBonusAndReset(Leagues league, List<UserLeagues> userLeaguesSorted) {
         int rank = 1;
 
@@ -177,7 +176,7 @@ public class LeagueService {
         return leaguesRepository.save(newLeague);
     }
 
-    // 🔹 남은 시즌 시간 계산
+    // 남은 시즌 시간 계산
     private String buildRemainingTime(LocalDateTime now, LocalDateTime end) {
         if (now.isAfter(end)) {
             return "0일 0시간 0분";
@@ -186,7 +185,7 @@ public class LeagueService {
         return String.format("%d일 %d시간 %d분", d.toDays(), d.toHours() % 24, d.toMinutes() % 60);
     }
 
-    // 🔹 응답 DTO
+    // 응답 DTO
     public record LeagueResponse(
             List<LeaderboardResponseDto> leaderboard,
             int myRank,

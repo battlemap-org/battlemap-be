@@ -22,16 +22,14 @@ public class Dongs {
     private Long dongId;
 
     @Column(name = "dongName", nullable = false, length = 20)
-    private String dongName; // 동 이름
+    private String dongName;
 
-    // ✅ 카카오맵 / 실제 위치용
     @Column(name = "latitude")
     private Double latitude;
 
     @Column(name = "longitude")
     private Double longitude;
 
-    // ✅ 커스텀 이미지 좌표용
     @Column(name = "mapX")
     private Integer mapX;
 

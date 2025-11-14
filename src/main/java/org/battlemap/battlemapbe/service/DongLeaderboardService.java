@@ -36,7 +36,7 @@ public class DongLeaderboardService {
                 .orElseThrow(() ->
                         new CustomException("USER_NOT_FOUND", "존재하지 않는 사용자입니다.", HttpStatus.NOT_FOUND));
         String myName = me.getName();
-        String myColorCode = me.getUserColorCode(); // 1. 로그인 사용자 본인 색상 조회
+        String myColorCode = me.getUserColorCode(); // 로그인 사용자 본인 색상 조회
 
         // 현재 진행 중인 리그(시즌) 조회
         LocalDateTime now = LocalDateTime.now();
@@ -57,7 +57,7 @@ public class DongLeaderboardService {
                 .map(DongLeaderboardResponse.Player::getName)
                 .collect(Collectors.toList());
 
-        // 닉네임 리스트를 기반으로 모든 Users 엔티티를 한 번에 조회 (findAllByNameIn 사용)
+        // 닉네임 리스트를 기반으로 모든 Users 엔티티를 한 번에 조회
         List<Users> usersInLeaderboard = userRepository.findAllByNameIn(playerNames);
 
         // 닉네임을 Key로, 색상 코드를 Value로 하는 Map을 생성 (O(1) 시간 복잡도로 색상 조회 가능)
@@ -77,10 +77,8 @@ public class DongLeaderboardService {
             DongLeaderboardResponse.Player p = allPlayers.get(i);
             int rank = i + 1;
 
-            // Map에서 색상 코드를 가져와 DTO를 재구성함
             String currentColor = colorMap.getOrDefault(p.getName(), DEFAULT_COLOR);
 
-            // DTO를 색상 코드를 포함하여 재구성 (Player DTO는 name, point, colorCode 필드가 있음)
             DongLeaderboardResponse.Player playerWithColor = new DongLeaderboardResponse.Player(
                     p.getName(),
                     p.getPoint(),
@@ -98,7 +96,6 @@ public class DongLeaderboardService {
         }
 
         // 응답 DTO 구성
-        // MyRank DTO에 본인 색상 코드를 추가합니다.
         DongLeaderboardResponse.MyRank meDto =
                 new DongLeaderboardResponse.MyRank(myRank, myName, myPoint, myColorCode); // myColorCode 추가
 
