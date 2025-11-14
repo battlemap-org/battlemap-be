@@ -26,7 +26,7 @@ public class Quests {
     @Column(name = "questContent", nullable = false, length = 255)
     private String questContent; // 퀘스트 내용
 
-    @Column(name = "answer", nullable = false)
+    @Column(name = "answer", nullable = false, columnDefinition = "TEXT")
     private String answer; // 퀘스트 정답
 
     @Column(name = "rewardPoint", nullable = false)
