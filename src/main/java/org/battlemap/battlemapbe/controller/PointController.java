@@ -20,7 +20,7 @@ public class PointController {
     private final UserService userService;
     private final PointService pointService;
 
-    // 사용자 전체 포인트 조회 (/api/points)
+    // 사용자 전체 포인트 조회
     @GetMapping("/points")
     public ResponseEntity<ApiResponse<Map<String, Integer>>> getUserPoints(Authentication authentication) {
         String loginId = authentication.getName();
@@ -30,8 +30,7 @@ public class PointController {
         );
     }
 
-    // 한 달마다 리셋 후 다음 시즌으로 갱신
-    // 나의 동별 포인트 & 완료 퀘스트 수 조회 (/api/users/me/cities/{cityName}/dongs/points-and-quests)
+    // 나의 동별 포인트 & 완료 퀘스트 수 조회
     @GetMapping("/users/me/cities/{cityName}/dongs/points-and-quests")
     public ResponseEntity<ApiResponse<List<UserDongPointResponse>>> getMyDongPointsAndQuests(
             @PathVariable String cityName,

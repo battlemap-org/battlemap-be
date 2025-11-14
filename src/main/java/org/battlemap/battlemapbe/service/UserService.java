@@ -37,7 +37,6 @@ public class UserService {
             "#00FFFF", // 하늘
             "#FF00FF", // 마젠타
 
-            // 추가 고채도 색상 (Highly Saturated)
             "#4169E1", // 로열 블루
             "#B8860B", // 다크 골든로드
             "#228B22", // 포레스트 그린
@@ -47,7 +46,7 @@ public class UserService {
             "#FF1493", // 딥 핑크
             "#7CFC00", // 라임 그린
 
-            // 명도가 다른 중간 색상 (Distinguishable Intermediate)
+            // 명도가 다른 중간 색상
             "#808000", // 올리브
             "#4682B4", // 스틸 블루
             "#9932CC", // 다크 오키드
@@ -79,7 +78,7 @@ public class UserService {
         if (!user.getPw().matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&]).{8,}$")) {
             throw new CustomException("USER_400", "비밀번호 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST);
         }
-        // 기본 포인트 설정 (없으면 2000으로)
+        // 기본 포인트 설정
         if (user.getPoint() == 0) {
             user.setPoint(3000);
         }
@@ -136,7 +135,7 @@ public class UserService {
                 .build();
     }
 
-    // 토큰 기반 사용자 이름 조회 (Map 반환)
+    // 토큰 기반 사용자 이름 조회
     public Map<String, Object> getUserNameByToken(String token) {
         if (token == null || !token.startsWith("Bearer ")) {
             throw new CustomException("TOKEN_400", "토큰 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST);

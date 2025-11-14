@@ -31,10 +31,8 @@ public class WalletController {
     @GetMapping("/balance")
     public ResponseEntity<WalletBalanceResponse> getWalletBalance(Authentication authentication) {
 
-        // 로그인된 사용자 정보 가져오기
         String loginId = authentication.getName();
 
-        // 서비스에서 해당 유저의 잔액 조회
         WalletBalanceResponse response = walletService.getWalletBalance(loginId);
 
         return ResponseEntity.ok(response);

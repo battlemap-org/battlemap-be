@@ -28,7 +28,7 @@ public class UserController {
         );
     }
 
-    // 로그인 (LoginResponse DTO 반환)
+    // 로그인
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody Users user) {
         LoginResponse response = userService.login(user.getId(), user.getPw());
@@ -37,7 +37,7 @@ public class UserController {
         );
     }
 
-    // 로그아웃 api
+    // 로그아웃
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<?>> logout(@RequestHeader("Authorization") String token) {
         userService.logout(token);

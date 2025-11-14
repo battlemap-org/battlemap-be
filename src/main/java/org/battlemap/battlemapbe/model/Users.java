@@ -16,14 +16,14 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Users extends BaseEntity {
-
+    //로그인
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "userId", nullable = false)
     private Long userId;
 
     @Column(name = "id", nullable = false, length = 20, unique = true)
-    private String id; // 사용자 아이디
+    private String id;
 
     @Column(name = "name", nullable = false, length = 20)
     private String name;
@@ -34,19 +34,19 @@ public class Users extends BaseEntity {
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email;
 
-    // 추가된 필드: 사용자 고유 색상 코드 (예: #FF00FF)
+    //사용자 고유 색상 코드
     @Column(name = "user_color_code", length = 7, nullable = true) // 마이그레이션 위해 nullable=true 설정
     private String userColorCode;
 
     @Column(name = "token", length = 512)
     private String token;
 
-    // 포인트 잔액 (충전 가능한 자원)
+    // 포인트 잔액
     @Builder.Default
     @Column(name = "point", nullable = false)
     private int point = 0;
 
-    // 실제 지역화폐 잔액 (충전된 금액)
+    // 지역화폐 잔액
     @Builder.Default
     @Column(name = "balance", nullable = false)
     private int balance = 0;

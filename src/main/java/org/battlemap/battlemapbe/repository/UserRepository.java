@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<Users, Long> {
 
-    // 💡 추가된 메서드: DB에 저장된 모든 사용자 색상 코드를 조회
+    // DB에 저장된 모든 사용자 색상 코드 조회
     @Query("SELECT u.userColorCode FROM Users u WHERE u.userColorCode IS NOT NULL")
     List<String> findAllColors();
 

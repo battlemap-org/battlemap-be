@@ -20,7 +20,6 @@ public class CouponController {
     private final CouponService couponService;
 
     // 보유 쿠폰 조회
-    // GET /api/coupons
     @GetMapping
     public ResponseEntity<List<CouponView>> getMyCoupons(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
@@ -31,7 +30,6 @@ public class CouponController {
     }
 
     // 쿠폰 교환
-    // POST /api/coupons/redeem
     @PostMapping("/redeem")
     public ResponseEntity<?> redeem(Authentication authentication,
                                     @RequestBody CouponRedeemRequest request) {

@@ -7,7 +7,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 @Builder
+// 보유 지역화폐 잔액 응답
 public class WalletBalanceResponse {
-    private String loginId;  // 로그인된 사용자 ID
-    private Integer balance;    // 보유 지역화폐 잔액
+    private String loginId;
+    private Integer balance;
 }

@@ -15,8 +15,7 @@ public class StoreController {
 
     private final StoreService storeService;
 
-    // ex) /api/regions/부천시/dongs/역곡동/stores?category=CE7
-    // 가게 조회 api
+    // 가게 조회
     @GetMapping("/{cityName}/dongs/{dongName}/stores")
     public ResponseEntity<Map<String, Object>> getStoresByCategory(
             Authentication authentication,

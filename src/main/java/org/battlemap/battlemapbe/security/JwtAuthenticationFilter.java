@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // JWT 검증이 필요한 경로만 필터 적용 (/api/ 로 시작)
+        // JWT 검증이 필요한 경로만 필터 적용
         if (!path.startsWith("/api/")) {
             filterChain.doFilter(request, response);
             return;
