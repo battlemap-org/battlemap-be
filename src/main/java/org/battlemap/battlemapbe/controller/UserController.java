@@ -36,15 +36,7 @@ public class UserController {
                 ApiResponse.success(response, 200)
         );
     }
-
-    // 로그아웃
-    @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<?>> logout(@RequestHeader("Authorization") String token) {
-        userService.logout(token);
-        return ResponseEntity.ok(
-                ApiResponse.success(Map.of("message", "로그아웃 성공"), 200)
-        );
-    }
+    
     // 사용자 이름 조회
     @GetMapping("/name")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getUserName(
