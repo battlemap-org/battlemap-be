@@ -14,10 +14,6 @@ public class DongLeaderboardQueryRepository {
     @PersistenceContext
     private EntityManager em;
 
-    /**
-     * 🔹 특정 동(dongName) + 시즌 기간(start~end) 안에서
-     * 완료된 퀘스트의 rewardPoint 합계를 유저별로 집계
-     */
     public List<DongLeaderboardResponse.Player> findDongLeaderboardByDongNameAndPeriod(
             String dongName,
             LocalDateTime start,
@@ -27,7 +23,7 @@ public class DongLeaderboardQueryRepository {
                 "SELECT new org.battlemap.battlemapbe.dto.league.DongLeaderboardResponse$Player(" +
                         "       uq.users.name, " +
                         "       SUM(q.rewardPoint), " +
-                        "       NULL" + // 💡 userColorCode 필드에 대한 임시 값
+                        "       NULL" + // userColorCode 필드에 대한 임시 값
                         ") " +
                         "FROM UserQuests uq " +
                         "JOIN uq.quests q " +

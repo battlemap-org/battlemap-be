@@ -17,9 +17,7 @@ public class LeagueController {
     private final DongLeaderboardService dongLeaderboardService;
     private final LeagueService leagueService;
 
-    // 한 달마다 리셋 후 다음 시즌으로 갱신
     // 특정 동 리더보드 조회
-    // 예시: GET /api/regions/부천시/dongs/역곡동/leaderboard
     @GetMapping("/{cityName}/dongs/{dongName}/leaderboard")
     public ResponseEntity<ApiResponse<DongLeaderboardResponse>> getDongLeaderboard(
             Authentication authentication,
@@ -41,8 +39,7 @@ public class LeagueController {
         return ResponseEntity.ok(ApiResponse.success(response, 200));
     }
 
-    // 시 단위 리그 리더보드 조회 (시즌 포인트 포함)
-    // 예시: GET /api/regions/부천시/leaderboard
+    // 시 단위 리그 리더보드 조회
     @GetMapping("/{cityName}/leaderboard")
     public ResponseEntity<ApiResponse<LeagueService.LeagueResponse>> getLeaderboardByCity(
             Authentication authentication,

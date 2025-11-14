@@ -40,6 +40,6 @@ public class CategoryDataInitializer {
         );
 
         categoriesRepository.saveAll(defaults);
-        System.out.println("✅ 기본 카테고리(FD6, CE7, CULTURE, AD5) 초기화 완료");
+        System.out.println("기본 카테고리(FD6, CE7, CULTURE, AD5) 초기화 완료");
     }
 }

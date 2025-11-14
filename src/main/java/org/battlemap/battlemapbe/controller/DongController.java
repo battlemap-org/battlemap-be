@@ -37,7 +37,7 @@ public class DongController {
         return ResponseEntity.ok(dongs);
     }
 
-    // 선택한 동의 카테고리 목록 조회 (DB 기반)
+    // 선택한 동의 카테고리 목록 조회
     @GetMapping("/{cityName}/dongs/{dongName}/categories")
     public ResponseEntity<List<Map<String, String>>> getCategories(
             Authentication authentication,

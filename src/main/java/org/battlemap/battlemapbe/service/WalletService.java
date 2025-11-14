@@ -17,7 +17,7 @@ public class WalletService {
 
     private final UserRepository userRepository;
 
-    // 지역화폐 충전 (users 테이블에서 직접 관리)
+    // 지역화폐 충전 
     @Transactional
     public WalletChargeResponse chargeWallet(String loginId, WalletChargeRequest request) {
         // 로그인 유저 검증

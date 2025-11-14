@@ -19,11 +19,11 @@ public class DongDataInitializer {
     public void initDongData() {
 
         if (dongsRepository.count() > 0) {
-            System.out.println("✅ Dongs 데이터 이미 존재함. 초기화 생략");
+            System.out.println("Dongs 데이터 이미 존재함. 초기화 생략");
             return;
         }
 
-        System.out.println("🟢 Dongs 테이블이 비어 있습니다. 부천시 & 동 좌표 데이터 자동 등록합니다.");
+        System.out.println("Dongs 테이블이 비어 있음. 부천시 & 동 좌표 데이터 자동 등록");
 
         Cities bucheon = Cities.builder()
                 .cityName("부천시")
@@ -127,7 +127,6 @@ public class DongDataInitializer {
                         .mapX(618).mapY(605).radius(50)
                         .cities(bucheon).build(),
 
-                // ✅ 작동 추가
                 Dongs.builder()
                         .dongName("작동")
                         .latitude(37.513291343602).longitude(126.815987741765)
@@ -177,9 +176,8 @@ public class DongDataInitializer {
                         .cities(bucheon).build()
         );
 
-
         dongsRepository.saveAll(dongs);
 
-        System.out.println("✅ 부천시 동 좌표 데이터 등록 완료 (lat/lng + mapX/mapY/radius)");
+        System.out.println("부천시 동 좌표 데이터 등록 완료");
     }
 }

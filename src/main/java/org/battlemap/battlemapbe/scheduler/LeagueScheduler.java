@@ -11,10 +11,8 @@ public class LeagueScheduler {
 
     private final LeagueService leagueService;
 
-    /**
-     * 🔹 매달 1일 00:00:00에 지난 시즌 자동 정산
-     * cron: 초 분 시 일 월 요일
-     */
+     // 매달 1일 00:00:00에 지난 시즌 자동 정산
+     // cron: 초 분 시 일 월 요일
     @Scheduled(cron = "0 0 0 1 * *")
     public void monthlyLeagueSettle() {
         leagueService.settleExpiredLeagues();
