@@ -36,7 +36,7 @@ public class UserController {
                 ApiResponse.success(response, 200)
         );
     }
-    
+
     // 사용자 이름 조회
     @GetMapping("/name")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getUserName(

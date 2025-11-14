@@ -160,7 +160,7 @@ public class UserService {
         return user.getPoint();
     }
 
-    // 로그아웃
+    
     public void logout(String token) {
         // Bearer 제거 및 토큰 유효성 검증
         if (token == null || !token.startsWith("Bearer ")) {
