@@ -18,12 +18,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import java.util.Collections;
-
 import java.util.Base64;
-
 import java.util.*;
 import java.util.stream.Collectors;
-
 
 @Service
 @RequiredArgsConstructor
@@ -56,15 +53,15 @@ public class QuestService {
             "%s에서 가장 가까운 지하철 역은?"
     );
 
-    // 퀘스트 정답 템플릿 (임시)
+    // 퀘스트 정답 템플릿 (AI 호출 실패 시 Fallback 용)
     private static final List<String> QUEST_ANSWERS = List.of(
             "인증 필요",
-            "비싼 메뉴",
-            "싼 메뉴",
-            "라떼",
-            "토마토파스타",
-            "예",
-            "홍대입구역"
+            "가장 비싼 메뉴와 그 가격 (예: 'XX', 00000원)",
+            "가장 싼 메뉴와 그 가격 (사이드 메뉴 포함, 예: 'XX', 0000원)",
+            "시그니처 메뉴 (메뉴 이름만 간결하게)",
+            "인기 메뉴 1가지 (메뉴 이름만 간결하게)",
+            "주차 가능 여부 (예/아니오/정보 없음 중 하나로만 대답)",
+            "가장 가까운 지하철 역 이름 (예: 역곡역)"
     );
 
     // 퀘스트 리워드 포인트 템플릿
@@ -121,8 +118,14 @@ public class QuestService {
         Quests quest = questsRepository.findById(questId)
                 .orElseThrow(() -> new CustomException("QUEST_404", "TodayQuest 경로를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        // 정답 여부 판단
-        boolean isCorrect = quest.getAnswer().equalsIgnoreCase(userAnswerContent.trim());
+        // 중복 정답 허용
+        // DB에 저장된 답 (예: "계란김밥,보석김밥")을 쉼표로 분리
+        List<String> correctAnswers = Arrays.asList(quest.getAnswer().split(","));
+
+        // 사용자의 답변이 정답 목록 중 하나와 일치하는지 확인
+        boolean isCorrect = correctAnswers.stream()
+                .anyMatch(answer -> answer.trim().equalsIgnoreCase(userAnswerContent.trim()));
+
         int reward = isCorrect ? quest.getRewardPoint() : 0;
 
         // 기존 기록 조회 or 새로 생성
@@ -130,8 +133,8 @@ public class QuestService {
                 .orElse(UserQuests.builder()
                         .users(user)
                         .quests(quest)
-                        .userAnswer("")      // 기본값 설정 (NULL 방지)
-                        .isCompleted(false)  // 기본값 설정
+                        .userAnswer("")
+                        .isCompleted(false)
                         .build());
 
         // isCompleted =1 이라면
@@ -150,23 +153,18 @@ public class QuestService {
 
         // 정답일 경우 포인트 지급
         if (isCorrect) {
-            // 현재 진행 중인 리그(시즌)를 찾음
             var currentLeague = leagueService.getCurrentLeagueOrThrow();
-
-            // 사용자 + 현재 리그 조합으로 UserLeagues 조회 및 없으면 새로 생성
             UserLeagues userLeague = userLeagueRepository.findByUsersAndLeagues(user, currentLeague)
                     .orElseGet(() -> {
-                        // 해당 시즌 첫 퀘스트이므로 새로 생성
                         UserLeagues newUserLeague = UserLeagues.builder()
                                 .users(user)
                                 .leagues(currentLeague)
                                 .leaguePoint(0)
-                                .userRank(0) // 추가: user_rank에 0으로 기본값 설정
+                                .userRank(0)
                                 .build();
                         return userLeagueRepository.save(newUserLeague);
                     });
 
-            // 리그 포인트 업데이트 및 저장
             int currentPoint = userLeague.getLeaguePoint();
             userLeague.setLeaguePoint(currentPoint + reward);
             userLeagueRepository.save(userLeague);
@@ -205,17 +203,17 @@ public class QuestService {
         // AI 이미지 검증
         String storeName = quest.getStores().getStoreName();
 
-        // Gemini API 프롬프트 생성
+        // AI 프롬프트를 OCR(텍스트 추출)로 변경
         String prompt = "Extract all visible text from the main sign in this image. Respond with only the extracted text.";
 
-        // emini API 호출 (URL -> Base64 변환)
+        // Gemini API 호출 (URL -> Base64 변환)
         boolean isCorrect = callGeminiVisionApiFromUrl(prompt, imageUrl, storeName);
         int reward = isCorrect ? quest.getRewardPoint() : 0;
 
         String authMessage = isCorrect ? "AI 인증 완료" : "AI 인증 실패";
 
-        // UserQuests 기록 업데이트
-        userQuest.setUserAnswer(imageUrl); // userAnswer에 이미지 URL 저장
+        // UserQuests 기록 업데이트 (userAnswer에 이미지 URL 저장)
+        userQuest.setUserAnswer(imageUrl);
         userQuest.setIsCompleted(isCorrect);
         if (isCorrect) {
             userQuest.setCompletedAt(java.time.LocalDateTime.now());
@@ -243,7 +241,8 @@ public class QuestService {
         return QuestAnswerResponseDto.from(isCorrect, reward, authMessage);
     }
 
-    //Gemini Vision API 호출 (URL 다운로드 후 Base64로 변환)
+    // Gemini Vision API 호출 (URL 다운로드 후 Base64로 변환)
+
     private boolean callGeminiVisionApiFromUrl(String prompt, String imageUrl, String storeName) {
 
         // URL에서 이미지 다운로드
@@ -251,21 +250,25 @@ public class QuestService {
         String mimeType;
 
         try {
-            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(imageUrl, HttpMethod.GET, null, byte[].class);
+            // User-Agent 헤더 설정 (일부 호스팅 사이트 403 방지)
+            HttpHeaders downloadHeaders = new HttpHeaders();
+            downloadHeaders.add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+            HttpEntity<String> downloadEntity = new HttpEntity<>(downloadHeaders);
+
+            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(imageUrl, HttpMethod.GET, downloadEntity, byte[].class);
 
             if (!responseEntity.hasBody() || responseEntity.getBody() == null) {
                 throw new CustomException("IMAGE_DOWNLOAD_FAILED", "이미지 URL에서 빈 파일을 다운로드했습니다.", HttpStatus.BAD_REQUEST);
             }
 
             imageBytes = responseEntity.getBody();
-
-            // Content-Type 헤더에서 실제 MimeType 추출
             MediaType mediaType = responseEntity.getHeaders().getContentType();
-            if (mediaType != null) {
+
+            // MimeType 동적 감지
+            if (mediaType != null && mediaType.getType().startsWith("image")) {
                 mimeType = mediaType.toString();
             } else {
-                // 헤더가 없는 경우, 기본값(jpeg)으로 설정 (실패 가능성 있음)
-                mimeType = "image/jpeg";
+                mimeType = "image/jpeg"; // 기본값
             }
 
         } catch (Exception e) {
@@ -281,9 +284,8 @@ public class QuestService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
-        // API 요청 Body 생성 (동적 MimeType 사용)
+        // API 요청 Body (inline_data 사용)
         GeminiPart textPart = new GeminiPart(prompt);
-        // 'mimeType' 변수 사용
         GeminiPart imagePart = new GeminiPart(new GeminiInlineData(mimeType, base64Image));
         GeminiContent content = new GeminiContent("user", List.of(textPart, imagePart));
         GeminiRequest payload = new GeminiRequest(List.of(content));
@@ -300,7 +302,7 @@ public class QuestService {
                     GeminiResponse.class
             );
 
-            // 응답 파싱 (기존과 동일)
+            // 응답 파싱
             if (response.getBody() != null &&
                     response.getBody().getCandidates() != null &&
                     !response.getBody().getCandidates().isEmpty() &&
@@ -310,6 +312,7 @@ public class QuestService {
                 String aiResponse = response.getBody().getCandidates().get(0).getContent().getParts().get(0).getText();
                 if (aiResponse == null) return false;
 
+                // 공백 제거
                 String aiText = aiResponse.replaceAll("\\s+", "");
                 String storeNameText = storeName.replaceAll("\\s+", "");
 
@@ -329,6 +332,56 @@ public class QuestService {
         }
     }
 
+    // Gemini 텍스트 생성 API 호출 (Google Search 연동)
+    private String callGeminiTextApi(String storeName, String prompt) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        // Google Search를 사용하도록 tools 설정
+        GeminiTool tool = new GeminiTool(new HashMap<>());
+
+        // AI가 간결하게 답변하도록 프롬프트 수정 (중복 정답 포함)
+        String fullPrompt = String.format("'%s' 가게에 대한 다음 질문에 간결하게 답해줘: '%s'. " +
+                        "설명이나 부연 없이 오직 답만 말해줘. (예: 50,000원 또는 예 또는 역곡역). " +
+                        "만약 가격이 같은 메뉴 등 정답이 여러 개라면 쉼표(,)로 구분해줘. (예: 계란김밥,보석김밥)",
+                storeName, prompt);
+
+        GeminiPart textPart = new GeminiPart(fullPrompt);
+        GeminiContent content = new GeminiContent("user", List.of(textPart));
+
+        // 텍스트 생성용 Payload
+        GeminiTextRequest payload = new GeminiTextRequest(List.of(content), List.of(tool));
+
+        HttpEntity<GeminiTextRequest> entity = new HttpEntity<>(payload, headers);
+
+        try {
+            String apiUrl = geminiApiUrl + geminiApiKey;
+            ResponseEntity<GeminiResponse> response = restTemplate.exchange(
+                    apiUrl,
+                    HttpMethod.POST,
+                    entity,
+                    GeminiResponse.class
+            );
+
+            // 응답 파싱
+            if (response.getBody() != null &&
+                    response.getBody().getCandidates() != null &&
+                    !response.getBody().getCandidates().isEmpty() &&
+                    response.getBody().getCandidates().get(0).getContent() != null &&
+                    !response.getBody().getCandidates().get(0).getContent().getParts().isEmpty()) {
+
+                String aiResponse = response.getBody().getCandidates().get(0).getContent().getParts().get(0).getText();
+                return aiResponse.trim();
+            }
+            return null; // AI가 답변을 생성하지 못함
+
+        } catch (Exception e) {
+            System.err.println("Gemini 텍스트 API 호출 실패: " + e.getMessage());
+            return null; // API 호출 실패
+        }
+    }
+
     // 가게별 퀘스트 생성 (4개)
     @Transactional
     public StoreQuestResponseDto createRandomQuestForStore(String loginId, Long storeId) {
@@ -341,7 +394,6 @@ public class QuestService {
                 .orElseThrow(() -> new CustomException("STORE_NOT_FOUND", "존재하지 않는 가게입니다.", HttpStatus.NOT_FOUND));
 
         Random random = new Random();
-
         List<QuestDetailDto> questDetails = new ArrayList<>();
 
         // 템플릿 인덱스 리스트 생성 (0~6)
@@ -349,11 +401,8 @@ public class QuestService {
         for (int i = 0; i < QUEST_TEMPLATES.size(); i++) {
             templateIndices.add(i);
         }
-
-        // 인덱스 리스트를 랜덤하게 섞음
         Collections.shuffle(templateIndices);
 
-        // 섞인 리스트에서 4개만 선택하여 퀘스트 생성
         for (int i = 0; i < QUEST_COUNT_TO_GENERATE; i++) {
             int templateIndex = templateIndices.get(i);
 
@@ -366,12 +415,24 @@ public class QuestService {
                 questContent = template;
             }
 
-            String answer = QUEST_ANSWERS.get(templateIndex);
+            String answerTemplate = QUEST_ANSWERS.get(templateIndex);
+            String answer;
+
+            if ("인증 필요".equals(answerTemplate)) {
+                answer = "인증 필요";
+            } else {
+                // "인증 필요"가 아니면, AI를 호출하여 실제 정답을 생성
+                // AI에게 전송할 프롬프트
+                String aiGeneratedAnswer = callGeminiTextApi(store.getStoreName(), answerTemplate);
+
+                // AI 호출 실패 시 임시 템플릿 사용
+                answer = (aiGeneratedAnswer != null) ? aiGeneratedAnswer : answerTemplate;
+            }
+
             Integer rewardPoint = REWARD_POINTS.get(random.nextInt(REWARD_POINTS.size()));
 
-            // Quests 생성 및 저장
             Quests quest = Quests.builder()
-                    .questNumber(i + 1) // 퀘스트 번호는 1, 2, 3, 4
+                    .questNumber(i + 1)
                     .questContent(questContent)
                     .answer(answer)
                     .rewardPoint(rewardPoint)
@@ -405,6 +466,8 @@ public class QuestService {
         );
     }
 
+    // gemini vision dto
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -418,6 +481,17 @@ public class QuestService {
     public static class GeminiContent {
         private String role;
         private List<GeminiPart> parts;
+    }
+
+    // GeminiFileData (URL)
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GeminiFileData {
+        @JsonProperty("mime_type")
+        private String mimeType;
+        @JsonProperty("file_uri")
+        private String fileUri;
     }
 
     // GeminiInlineData (Base64)
@@ -437,9 +511,11 @@ public class QuestService {
     public static class GeminiPart {
         private String text;
 
-        // inlineData
+        @JsonProperty("file_data")
+        private GeminiFileData fileData; // URL용
+
         @JsonProperty("inline_data")
-        private GeminiInlineData inlineData;
+        private GeminiInlineData inlineData; // Base64용
 
         // 텍스트용 생성자
         public GeminiPart(String text) {
@@ -449,6 +525,11 @@ public class QuestService {
         // 이미지 Base64용 생성자
         public GeminiPart(GeminiInlineData inlineData) {
             this.inlineData = inlineData;
+        }
+
+        // 이미지 URL용 생성자
+        public GeminiPart(GeminiFileData fileData) {
+            this.fileData = fileData;
         }
     }
 
@@ -464,4 +545,23 @@ public class QuestService {
     public static class GeminiCandidate {
         private GeminiContent content;
     }
+
+    // --- Gemini Text (Google Search) DTOs ---
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GeminiTextRequest {
+        private List<GeminiContent> contents;
+        private List<GeminiTool> tools;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GeminiTool {
+        @JsonProperty("google_search")
+        private Object googleSearch;
+    }
 }
+
