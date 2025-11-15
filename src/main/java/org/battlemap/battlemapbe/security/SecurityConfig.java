@@ -31,7 +31,8 @@ public class SecurityConfig {
                 "http://3.35.246.97",
                 "https://3.35.246.97:8081",
                 "https://battlemap.kr",
-                "https://www.battlemap.kr"
+                "https://www.battlemap.kr",
+                "https://jampatitibattlemap.netlify.app"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowCredentials(true);
