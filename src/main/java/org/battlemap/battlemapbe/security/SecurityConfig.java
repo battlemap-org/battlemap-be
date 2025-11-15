@@ -29,7 +29,9 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "http://3.35.246.97",
-                "https://3.35.246.97:8081"
+                "https://3.35.246.97:8081",
+                "https://battlemap.kr",
+                "https://www.battlemap.kr"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowCredentials(true);
